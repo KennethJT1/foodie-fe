@@ -39,6 +39,6 @@ export const describedBy = (id, error, hint) =>
 
 export const controlClasses = (error) =>
   cn(
-    'block w-full rounded-lg border bg-surface text-sm text-ink placeholder:text-ink-muted/70 focus:border-primary-600 focus:ring-primary-600 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-ink-muted',
+    'block w-full rounded-xl border bg-surface text-sm text-ink placeholder:text-ink-muted/70 focus:border-primary focus:ring-primary disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-ink-muted',
     error ? 'border-danger focus:border-danger focus:ring-danger' : 'border-surface-border',
   );

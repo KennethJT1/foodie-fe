@@ -49,7 +49,7 @@ export function LikeButton({ item, className }) {
       aria-label={`Like ${item.name}, ${item.likesCount} likes`}
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-tap items-center gap-1.5 rounded-full px-2 text-sm font-medium transition-colors hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
+        'inline-flex min-h-tap items-center gap-1.5 rounded-full px-2 text-sm font-medium transition-colors hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
         item.isLiked ? 'text-danger' : 'text-ink-muted',
         className,
       )}

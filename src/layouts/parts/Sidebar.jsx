@@ -22,15 +22,17 @@ export function SidebarNav({ sections, badges = {}, onNavigate }) {
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     cn(
-                      'flex min-h-[40px] items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
-                      isActive ? 'bg-primary-50 text-primary-700' : 'text-ink hover:bg-gray-100',
+                      'flex min-h-[42px] items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-primary font-semibold text-ink'
+                        : 'text-ink hover:bg-surface-muted',
                     )
                   }
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
                   <span className="flex-1">{label}</span>
                   {badgeKey && badges[badgeKey] > 0 && (
-                    <span className="rounded-full bg-primary-600 px-2 text-xs text-white">
+                    <span className="rounded-full bg-ink px-2 text-xs font-semibold text-white">
                       {badges[badgeKey]}
                     </span>
                   )}

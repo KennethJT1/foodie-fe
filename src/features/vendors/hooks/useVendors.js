@@ -64,3 +64,11 @@ export function useToggleFollow() {
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.follows.all }),
   });
 }
+
+/** Vendor list (e.g. popular vendors on the home page). */
+export const useVendorList = (params) =>
+  useQuery({
+    queryKey: queryKeys.vendors.list(params),
+    queryFn: () => vendorsApi.list(params),
+    placeholderData: keepPreviousData,
+  });

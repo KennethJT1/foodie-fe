@@ -3,7 +3,7 @@ import { Bike, Home, Store } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const KIND = {
-  rider: { icon: Bike, className: 'bg-primary-600 text-white', label: 'Rider' },
+  rider: { icon: Bike, className: 'bg-primary text-ink', label: 'Rider' },
   vendor: { icon: Store, className: 'bg-secondary text-white', label: 'Vendor' },
   customer: { icon: Home, className: 'bg-info text-white', label: 'Delivery address' },
   pin: { icon: null, className: 'bg-danger text-white', label: 'Pin' },
@@ -24,7 +24,7 @@ export function RiderMarker({ kind = 'rider', label, isActive = false, heading }
     >
       {kind === 'rider' && (
         <span
-          className="absolute inset-0 animate-ping rounded-full bg-primary-600 opacity-30"
+          className="absolute inset-0 animate-ping rounded-full bg-primary opacity-40"
           aria-hidden="true"
         />
       )}

@@ -22,7 +22,7 @@ export function UserMenu({ profileTo }) {
           type="button"
           {...p}
           aria-label="Account menu"
-          className="flex min-h-tap items-center gap-2 rounded-full pl-1 pr-2 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+          className="flex min-h-tap items-center gap-2 rounded-full pl-1 pr-2 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
         >
           <Avatar name={user.name} src={user.avatar} size="sm" />
           <span className="hidden text-left text-sm leading-tight md:block">

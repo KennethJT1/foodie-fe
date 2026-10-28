@@ -48,7 +48,7 @@ export function AddressBook() {
           <li key={a.id}>
             <Card padding="sm" className="flex h-full flex-col gap-2">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary-600" aria-hidden="true" />
+                <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
                 <h2 className="font-semibold">{a.label}</h2>
                 {a.isDefault && <Badge tone="brand">Default</Badge>}
               </div>

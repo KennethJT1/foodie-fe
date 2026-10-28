@@ -28,10 +28,10 @@ export function CategoryChips({ value, onChange, className }) {
                 aria-pressed={on}
                 onClick={() => onChange(c.id || null)}
                 className={cn(
-                  'inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
+                  'inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
                   on
-                    ? 'border-primary-600 bg-primary-600 text-white'
-                    : 'border-surface-border bg-surface text-ink hover:border-primary-600',
+                    ? 'border-primary bg-primary text-ink'
+                    : 'border-surface-border bg-surface text-ink hover:border-primary',
                 )}
               >
                 <span aria-hidden="true">{c.icon}</span>

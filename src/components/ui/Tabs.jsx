@@ -32,7 +32,7 @@ export function Tabs({
       aria-label={ariaLabel}
       className={cn(
         'flex gap-1 overflow-x-auto',
-        variant === 'underline' ? 'border-b border-surface-border' : 'rounded-full bg-gray-100 p-1',
+        variant === 'underline' ? 'border-b border-surface-border' : 'gap-2',
         className,
       )}
     >
@@ -50,15 +50,17 @@ export function Tabs({
             onClick={() => onChange?.(item.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'inline-flex min-h-tap shrink-0 items-center gap-2 whitespace-nowrap px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
+              'inline-flex min-h-tap shrink-0 items-center gap-2 whitespace-nowrap px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
               variant === 'underline' &&
                 (selected
-                  ? 'border-b-2 border-primary-600 text-primary-700'
+                  ? 'border-b-2 border-primary text-ink'
                   : 'border-b-2 border-transparent text-ink-muted hover:text-ink'),
               variant === 'pills' &&
                 cn(
-                  'min-h-[36px] rounded-full',
-                  selected ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
+                  'min-h-[40px] rounded-full border px-4',
+                  selected
+                    ? 'border-primary bg-primary font-semibold text-ink'
+                    : 'border-surface-border bg-surface text-ink hover:border-ink',
                 ),
             )}
           >
@@ -67,7 +69,7 @@ export function Tabs({
               <span
                 className={cn(
                   'rounded-full px-1.5 text-xs',
-                  selected ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-ink-muted',
+                  selected ? 'bg-ink text-white' : 'bg-surface-muted text-ink-muted',
                 )}
               >
                 {item.count}

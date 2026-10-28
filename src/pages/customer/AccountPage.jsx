@@ -49,7 +49,7 @@ export default function AccountPage() {
                   to={to}
                   className="flex min-h-[52px] items-center gap-3 px-4 hover:bg-primary-50"
                 >
-                  <Icon className="h-5 w-5 text-primary-600" aria-hidden="true" />
+                  <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                   <span className="flex-1 font-medium">{label}</span>
                   <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden="true" />
                 </Link>

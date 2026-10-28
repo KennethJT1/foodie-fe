@@ -1,4 +1,4 @@
-import { Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBasket, UserCircle2 } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
@@ -12,6 +12,8 @@ import { useUiStore } from '@/stores/ui-store';
 
 import { customerTabs } from './nav/customer';
 import { BottomTabs } from './parts/BottomTabs';
+import { CustomerFooter } from './parts/CustomerFooter';
+import { CustomerTopBar } from './parts/CustomerTopBar';
 import { Logo } from './parts/Logo';
 import { UserMenu } from './parts/UserMenu';
 
@@ -23,25 +25,35 @@ export default function CustomerLayout() {
   const openCart = useUiStore((s) => s.openCart);
   const isCustomer = user?.role === 'customer';
 
+  const links = [
+    { to: ROUTES.home, label: 'Home', end: true },
+    { to: ROUTES.search, label: 'Browse food' },
+    ...(isCustomer
+      ? [
+          { to: ROUTES.account.orders, label: 'Track order' },
+          { to: ROUTES.account.following, label: 'Following' },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="min-h-screen pb-[72px] md:pb-0">
-      <header className="sticky top-0 z-30 border-b border-surface-border bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-6">
+    <div className="flex min-h-screen flex-col bg-surface pb-[72px] md:pb-0">
+      <CustomerTopBar />
+      <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:h-20 md:px-6">
           <Logo />
-          <nav aria-label="Main" className="ml-6 hidden items-center gap-1 md:flex">
-            {[
-              { to: ROUTES.home, label: 'Home', end: true },
-              { to: ROUTES.search, label: 'Search' },
-              ...(isCustomer ? [{ to: ROUTES.account.orders, label: 'Orders' }] : []),
-            ].map((l) => (
+          <nav aria-label="Main" className="mx-auto hidden items-center gap-2 md:flex">
+            {links.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
                 end={l.end}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-lg px-3 py-2 text-sm font-medium',
-                    isActive ? 'text-primary-700' : 'text-ink hover:bg-primary-50',
+                    'rounded-full px-5 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary font-semibold text-ink'
+                      : 'text-ink hover:bg-surface-muted',
                   )
                 }
               >
@@ -49,11 +61,11 @@ export default function CustomerLayout() {
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1 md:ml-0">
             <Link
               to={ROUTES.search}
               aria-label="Search"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-primary-50 md:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-surface-muted md:hidden"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -62,11 +74,11 @@ export default function CustomerLayout() {
                 type="button"
                 onClick={openCart}
                 aria-label={cartCount ? `Cart, ${cartCount} items` : 'Cart'}
-                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-primary-50"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary-600 md:hidden"
               >
-                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                <ShoppingBasket className="h-5 w-5" aria-hidden="true" />
                 {cartCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-600 px-1 text-[11px] font-semibold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-ink">
                     {cartCount}
                   </span>
                 )}
@@ -79,22 +91,22 @@ export default function CustomerLayout() {
               </>
             ) : (
               status === 'anonymous' && (
-                <div className="flex items-center gap-2">
-                  <Button asChild variant="ghost" size="sm">
-                    <Link to={ROUTES.login}>Log in</Link>
-                  </Button>
-                  <Button asChild size="sm" className="hidden sm:inline-flex">
-                    <Link to={ROUTES.signup('customer')}>Sign up</Link>
-                  </Button>
-                </div>
+                <Button asChild variant="dark" size="md" leftIcon={null} className="px-4 md:px-6">
+                  <Link to={ROUTES.login}>
+                    <UserCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <span className="hidden sm:inline">Log in / Sign up</span>
+                    <span className="sm:hidden">Log in</span>
+                  </Link>
+                </Button>
               )
             )}
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto max-w-6xl">
+      <main id="main" className="mx-auto w-full max-w-6xl flex-1">
         <Outlet />
       </main>
+      <CustomerFooter />
       <BottomTabs tabs={customerTabs} />
       <CartDrawer />
     </div>

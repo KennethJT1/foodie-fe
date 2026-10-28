@@ -59,7 +59,7 @@ export function Rating({
             if (e.key === 'ArrowLeft' || e.key === 'ArrowDown')
               onChange?.(Math.max(1, (value || 1) - 1));
           }}
-          className="rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+          className="rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
         >
           <Star
             className={cn(px, n <= shown ? 'fill-accent text-accent' : 'text-gray-300')}

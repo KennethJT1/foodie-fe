@@ -33,7 +33,7 @@ export default function DashboardLayout({
   const sections = useMemo(() => filterNav(nav, user), [nav, user]);
 
   return (
-    <div className="min-h-screen lg:pl-64">
+    <div className="min-h-screen bg-surface-page lg:pl-64">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-surface-border bg-surface lg:flex">
         <div className="flex h-16 items-center px-5">
           <Logo to={home} subtitle={subtitle} />

@@ -62,8 +62,8 @@ export function SignupForm({ role }) {
               className={cn(
                 'flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-lg border text-xs font-medium',
                 key === role
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-surface-border text-ink hover:border-primary-600',
+                  ? 'border-primary bg-primary-50 text-primary-700'
+                  : 'border-surface-border text-ink hover:border-primary',
               )}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />

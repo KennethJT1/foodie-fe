@@ -15,7 +15,7 @@ export function FoodCard({ item, showVendor = true, className }) {
     <Link
       to={ROUTES.food(item.id)}
       className={cn(
-        'group block overflow-hidden rounded-card bg-surface shadow-card transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
+        'group block overflow-hidden rounded-card bg-surface shadow-card transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
         className,
       )}
     >

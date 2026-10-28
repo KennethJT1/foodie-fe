@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/feedback';
 import { Avatar, Button } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
-import { FoodImage } from '@/features/catalogue';
 import { formatNaira } from '@/lib/format';
 import { linePrice, selectCartSubtotal, useCartStore } from '@/stores/cart-store';
 
@@ -52,13 +51,13 @@ export function CartView({ onNavigate, showCheckout = false }) {
       <ul className="divide-y divide-surface-border">
         {lines.map((l) => (
           <li key={l.key} className="flex gap-3 py-3">
-            <div className="w-16 shrink-0 overflow-hidden rounded-lg">
-              <FoodImage src={l.photo} alt={l.name} />
-            </div>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-ink">
+              {l.quantity}x
+            </span>
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium">{l.name}</p>
-                <p className="text-sm font-semibold">{formatNaira(linePrice(l))}</p>
+                <p className="text-sm font-bold text-secondary">{formatNaira(linePrice(l))}</p>
               </div>
               {l.options.length > 0 && (
                 <p className="text-xs text-ink-muted">{l.options.map((o) => o.name).join(', ')}</p>
@@ -79,7 +78,7 @@ export function CartView({ onNavigate, showCheckout = false }) {
       </div>
       <p className="text-xs text-ink-muted">Delivery and processing fees are shown at checkout.</p>
       {showCheckout && (
-        <Button asChild fullWidth size="lg">
+        <Button asChild fullWidth size="lg" variant="secondary">
           <Link to={ROUTES.account.checkout} onClick={onNavigate}>
             Go to checkout – {formatNaira(subtotal)}
           </Link>

@@ -4,13 +4,14 @@ import { forwardRef, isValidElement } from 'react';
 import { cn } from '@/lib/cn';
 
 const iconButtonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        ghost: 'text-ink hover:bg-primary-50',
-        outline: 'border border-surface-border bg-surface text-ink hover:bg-primary-50',
-        primary: 'bg-primary-600 text-white hover:bg-primary-700',
+        ghost: 'text-ink hover:bg-surface-muted',
+        outline: 'border border-surface-border bg-surface text-ink hover:border-ink',
+        dark: 'bg-ink text-white hover:bg-ink/90',
+        primary: 'bg-primary text-ink hover:bg-primary-600',
         danger: 'text-danger hover:bg-danger-50',
       },
       // 44 px tap target from md up (riders use the app on the move)

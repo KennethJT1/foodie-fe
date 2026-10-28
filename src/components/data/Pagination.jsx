@@ -46,7 +46,7 @@ export function Pagination({
             <select
               value={limit}
               onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="h-9 rounded-lg border-surface-border py-0 text-sm focus:border-primary-600 focus:ring-primary-600"
+              className="h-9 rounded-lg border-surface-border py-0 text-sm focus:border-primary focus:ring-primary"
               aria-label="Rows per page"
             >
               {limits.map((l) => (
@@ -79,8 +79,8 @@ export function Pagination({
                 aria-current={p === page ? 'page' : undefined}
                 aria-label={`Page ${p}`}
                 className={cn(
-                  'hidden h-9 min-w-[36px] rounded-lg px-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 sm:inline-block',
-                  p === page ? 'bg-primary-600 text-white' : 'hover:bg-primary-50',
+                  'hidden h-9 min-w-[36px] rounded-lg px-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink sm:inline-block',
+                  p === page ? 'bg-primary text-ink' : 'hover:bg-primary-50',
                 )}
               >
                 {p}

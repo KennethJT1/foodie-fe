@@ -34,6 +34,7 @@ export function Drawer({
   footer,
   side,
   className,
+  headerClassName,
   children,
   hideHeader = false,
 }) {
@@ -57,6 +58,7 @@ export function Drawer({
           className={cn(
             'flex items-center justify-between gap-3 border-b border-surface-border px-4 py-3',
             hideHeader && 'sr-only',
+            headerClassName,
           )}
         >
           <h2 id={titleId} className="text-lg font-semibold">

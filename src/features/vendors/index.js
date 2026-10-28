@@ -3,6 +3,7 @@ export { vendorsApi } from './api/vendors.api';
 export { FollowButton } from './components/FollowButton';
 export { FollowedVendorsList } from './components/FollowedVendorsList';
 export { OpeningHours } from './components/OpeningHours';
+export { PopularVendors } from './components/PopularVendors';
 export { Storefront } from './components/Storefront';
 export { VendorCard } from './components/VendorCard';
-export { useFollowedVendors, useToggleFollow, useVendor } from './hooks/useVendors';
+export { useFollowedVendors, useToggleFollow, useVendor, useVendorList } from './hooks/useVendors';

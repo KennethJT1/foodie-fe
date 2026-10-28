@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 
 const DOT = {
   done: 'bg-secondary text-white',
-  current: 'bg-primary-600 text-white ring-4 ring-primary-100',
+  current: 'bg-primary text-ink ring-4 ring-primary-100',
   upcoming: 'bg-gray-200 text-gray-500',
   danger: 'bg-danger text-white',
 };

@@ -32,7 +32,7 @@ export function Switch({
         disabled={disabled}
         onClick={() => onChange?.(!checked)}
         className={cn(
-          'relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          'relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           big ? 'h-10 w-[72px]' : 'h-6 w-11',
           checked ? 'bg-secondary' : 'bg-gray-300',
         )}

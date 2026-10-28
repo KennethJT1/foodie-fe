@@ -319,7 +319,7 @@ const { data, isLoading } = useOrders(table.params);
 
 ## 8. Styling with Tailwind
 
-Brand colours from the BRD become named Tailwind tokens; components use the token names (`bg-primary`, `text-ink`), never raw hex values.
+Brand colours from the BRD (section 15) become named Tailwind tokens; components use the token names (`bg-primary`, `text-ink`), never raw hex values. The visual reference is the Figma **Food Delivery Website & App Design UI Kit** (Digital Forest, CC BY 4.0): match its layouts, button shapes and placement, colours and type, while following these guidelines for structure, accessibility and content.
 
 ```js
 // tailwind.config.js (excerpt)
@@ -328,16 +328,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#E85D04', 50: '#FFF3EB', 100: '#FFE0CC', 600: '#C94F03', 700: '#A34002' }, // Jollof orange
-        secondary: { DEFAULT: '#1B7F3B', 50: '#EAF6EE', 600: '#166A31' },                         // Naija green
-        accent: { DEFAULT: '#FFB703', 50: '#FFF8E1' },                                           // Plantain yellow
-        ink: { DEFAULT: '#1F2937', muted: '#6B7280' },
-        surface: { DEFAULT: '#FFFFFF', page: '#FFF8F0', border: '#E5E7EB' },
+        primary: { DEFAULT: '#FC8A06', 50: '#FFF5E8', 100: '#FFE6C7', 600: '#E07A00', 700: '#A35900' }, // Orange
+        secondary: { DEFAULT: '#028643', 50: '#E6F4EC', 600: '#016B35' },                         // Cart green
+        accent: { DEFAULT: '#FFB703', 50: '#FFF8E1' },                                           // Rating yellow
+        ink: { DEFAULT: '#03081F', muted: '#5B6070' },                                           // Deep navy
+        surface: { DEFAULT: '#FFFFFF', page: '#FAFAFA', muted: '#F3F3F3', border: '#EEEEEE' },
         danger: '#DC2626', warning: '#D97706', info: '#2563EB',
       },
-      fontFamily: { heading: ['Poppins', 'sans-serif'], sans: ['Inter', 'sans-serif'] },
+      fontFamily: { heading: ['Poppins', 'sans-serif'], sans: ['Poppins', 'sans-serif'] },
       borderRadius: { card: '0.75rem' },
-      boxShadow: { card: '0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.1)' },
+      boxShadow: { card: '0 2px 8px rgb(3 8 31 / 0.06), 0 1px 2px rgb(3 8 31 / 0.04)' },
     },
   },
   plugins: [require('@tailwindcss/forms')], // line-clamp is built into Tailwind 3.3+
@@ -349,8 +349,10 @@ export default {
 - Use the `cn()` helper for conditional classes; never build class names with string concatenation (Tailwind cannot see them).
 - Spacing scale: 4, 8, 12, 16, 24, 32 px (`p-1`, `p-2`, `p-3`, `p-4`, `p-6`, `p-8`). Page gutter `px-4` on mobile, `px-6` from `md`.
 - Breakpoints: design at 360 px, check at `sm` 640, `md` 768, `lg` 1024, `xl` 1280.
-- Body text `text-sm`/`text-base` in `text-ink`; secondary text `text-ink-muted`. Headings use `font-heading`.
-- White text on primary orange fails contrast at small sizes: use `bg-primary-600` for buttons with white text, and plain `primary` for large shapes and icons.
+- Poppins for all text. Body text `text-sm`/`text-base` in `text-ink`; secondary text `text-ink-muted`. Headings use `font-heading` and `font-semibold`/`font-bold`.
+- White text on orange fails contrast: orange buttons, pills and badges use **navy text** (`bg-primary text-ink`). Dark buttons are navy with white text (`bg-ink text-white`). Orange text on white uses `text-primary-700`.
+- Shapes follow the UI kit: buttons, nav items, tabs and filter chips are pills (`rounded-full`); the active item is a filled orange pill. Cards are white, `rounded-card` (12 px) with `shadow-card`, on a `surface-page` (light grey) background.
+- Page patterns from the kit: a slim top bar (offer, delivery location, green cart button), then the main header (logo left, pill navigation in the middle, dark "Log in / Sign up" pill on the right); store pages open with a navy banner (name, rating box, hours, delivery info) and a sticky category pill strip; menu cards put text on the left and the photo on the right with a round "+" add button; the cart has a green header, orange quantity bubbles and a green checkout button; the customer footer is light grey with a navy bottom bar.
 - Status colours are fixed: success = secondary green, warning = amber, danger = red, info = blue, neutral = gray. The same status always looks the same everywhere.
 - Repeated class combinations become a component or a `cva` variant, not an `@apply` class.
 - Dark mode is out of scope for release 1; keep colours in tokens so it can be added later.

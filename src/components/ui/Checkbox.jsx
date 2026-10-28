@@ -15,7 +15,7 @@ export const Checkbox = forwardRef(function Checkbox(
         id={id}
         type="checkbox"
         aria-invalid={error ? true : undefined}
-        className="mt-0.5 h-5 w-5 rounded border-surface-border text-primary-600 focus:ring-primary-600"
+        className="mt-0.5 h-5 w-5 rounded border-surface-border text-primary focus:ring-primary"
         {...props}
       />
       {(label || description) && (
