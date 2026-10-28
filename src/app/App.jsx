@@ -1,6 +1,12 @@
-import TokensPage from '@/pages/dev/TokensPage';
+import { RouterProvider } from 'react-router-dom';
 
-// Providers and the router are wired in phase 3.
+import { AppProviders } from './providers';
+import { router } from './router';
+
 export default function App() {
-  return <TokensPage />;
+  return (
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  );
 }
