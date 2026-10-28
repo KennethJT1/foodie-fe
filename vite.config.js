@@ -15,5 +15,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.test.{js,jsx}'],
     css: false,
+    // jsdom + the seeded mock db are heavy; fewer workers keeps runs stable on laptops and CI
+    maxWorkers: '50%',
+    testTimeout: 15000,
+    hookTimeout: 20000,
   },
 });

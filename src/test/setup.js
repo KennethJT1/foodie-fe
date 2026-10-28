@@ -3,7 +3,7 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { registerMockSocket } from '@/lib/socket';
-import { resetDb } from '@/mocks/db';
+import { isDbDirty, resetDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
 import { createMockSocket } from '@/mocks/socket';
 
@@ -13,7 +13,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
   server.resetHandlers();
-  resetDb();
+  if (isDbDirty()) resetDb();
   window.localStorage.clear();
 });
 afterAll(() => server.close());
