@@ -32,9 +32,9 @@ export function RadioGroup({
               className={cn(
                 'flex cursor-pointer items-start gap-3 text-sm',
                 variant === 'cards' &&
-                  'rounded-card border bg-surface p-4 transition-colors hover:border-primary-600',
+                  'rounded-card border bg-surface p-4 transition-colors hover:border-primary',
                 variant === 'cards' &&
-                  (checked ? 'border-primary-600 bg-primary-50' : 'border-surface-border'),
+                  (checked ? 'border-primary bg-primary-50' : 'border-surface-border'),
               )}
             >
               <input
@@ -44,7 +44,7 @@ export function RadioGroup({
                 value={o.value}
                 checked={checked}
                 onChange={() => onChange?.(o.value)}
-                className="mt-0.5 h-5 w-5 border-surface-border text-primary-600 focus:ring-primary-600"
+                className="mt-0.5 h-5 w-5 border-surface-border text-primary focus:ring-primary"
               />
               <span>
                 <span className="font-medium text-ink">{o.label}</span>

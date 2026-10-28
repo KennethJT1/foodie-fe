@@ -126,7 +126,7 @@ export function Combobox({
                 onMouseEnter={() => setActive(i)}
               >
                 <Check
-                  className={cn('h-4 w-4 text-primary-600', o.value !== value && 'invisible')}
+                  className={cn('h-4 w-4 text-primary', o.value !== value && 'invisible')}
                   aria-hidden="true"
                 />
                 <span>

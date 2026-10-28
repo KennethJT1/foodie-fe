@@ -23,8 +23,8 @@ export function FoodGallery({ photos = [], alt, className }) {
               aria-label={`Show photo ${i + 1} of ${photos.length}`}
               aria-pressed={i === index}
               className={cn(
-                'w-20 overflow-hidden rounded-lg border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
-                i === index ? 'border-primary-600' : 'border-transparent',
+                'w-20 overflow-hidden rounded-lg border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink',
+                i === index ? 'border-primary' : 'border-transparent',
               )}
             >
               <FoodImage src={p} alt="" />

@@ -1,3 +1,4 @@
+import { ShoppingBasket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button, Drawer } from '@/components/ui';
@@ -19,10 +20,16 @@ export function CartDrawer() {
     <Drawer
       open={isOpen}
       onClose={close}
-      title="Your cart"
+      title={
+        <span className="flex items-center gap-2 text-white">
+          <ShoppingBasket className="h-6 w-6" aria-hidden="true" />
+          Your cart
+        </span>
+      }
+      headerClassName="border-b-0 bg-secondary py-4 text-white [&_button]:text-white [&_button:hover]:bg-white/15"
       footer={
         hasLines && (
-          <Button asChild fullWidth size="lg">
+          <Button asChild fullWidth size="lg" variant="secondary">
             <Link to={ROUTES.account.checkout} onClick={close}>
               Go to checkout – {formatNaira(subtotal)}
             </Link>

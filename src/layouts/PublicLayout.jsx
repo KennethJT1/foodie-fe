@@ -5,7 +5,7 @@ import { Logo } from './parts/Logo';
 /** Auth pages and error pages: centred card on the warm page background. */
 export default function PublicLayout() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-surface-page">
       <header className="px-4 py-4 md:px-6">
         <Logo />
       </header>

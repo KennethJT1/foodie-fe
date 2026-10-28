@@ -1,5 +1,6 @@
 // Public exports of the catalogue feature. Other features import only from here.
 export { catalogueApi } from './api/catalogue.api';
+export { CategoryCards } from './components/CategoryCards';
 export { CategoryChips } from './components/CategoryChips';
 export { FoodCard } from './components/FoodCard';
 export { FoodGallery } from './components/FoodGallery';

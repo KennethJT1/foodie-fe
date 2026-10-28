@@ -68,8 +68,8 @@ describe('discovery and social screens (phase 9 done-when)', () => {
     expect(await screen.findByRole('status', { name: 'Loading food' })).toBeInTheDocument();
     expect(await screen.findAllByRole('article')).toHaveLength(10);
     await userEvent.click(screen.getByRole('tab', { name: 'Popular' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Rice dishes' }));
-    expect(screen.getByRole('button', { name: 'Rice dishes' })).toHaveAttribute(
+    await userEvent.click(await screen.findByRole('button', { name: /^Rice dishes/ }));
+    expect(screen.getByRole('button', { name: /^Rice dishes/ })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -165,7 +165,7 @@ describe('discovery and social screens (phase 9 done-when)', () => {
     expect(
       await screen.findByRole('heading', { name: 'Mama Put Kitchen', level: 1 }),
     ).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Menu' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /All offers from/ })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Follow' }));
     expect(await screen.findByRole('button', { name: 'Following' })).toBeInTheDocument();
     await router.navigate('/account/following');

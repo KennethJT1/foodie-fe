@@ -72,7 +72,7 @@ export function OtpBoxes({
             onKeyDown={(e) => onKeyDown(i, e)}
             onFocus={(e) => e.target.select()}
             className={cn(
-              'h-12 w-11 rounded-lg border bg-surface text-center text-lg font-semibold focus:border-primary-600 focus:ring-primary-600 sm:w-12',
+              'h-12 w-11 rounded-lg border bg-surface text-center text-lg font-semibold focus:border-primary focus:ring-primary sm:w-12',
               error ? 'border-danger' : 'border-surface-border',
             )}
           />

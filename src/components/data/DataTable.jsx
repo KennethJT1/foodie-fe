@@ -72,7 +72,7 @@ export function DataTable({
                     aria-label="Select all rows"
                     checked={allSelected}
                     onChange={() => onSelectedChange?.(allSelected ? [] : allIds)}
-                    className="h-4 w-4 rounded border-surface-border text-primary-600 focus:ring-primary-600"
+                    className="h-4 w-4 rounded border-surface-border text-primary focus:ring-primary"
                   />
                 </th>
               )}
@@ -161,7 +161,7 @@ export function DataTable({
                           aria-label="Select row"
                           checked={selected.includes(id)}
                           onChange={() => toggleRow(id)}
-                          className="h-4 w-4 rounded border-surface-border text-primary-600 focus:ring-primary-600"
+                          className="h-4 w-4 rounded border-surface-border text-primary focus:ring-primary"
                         />
                       </td>
                     )}
@@ -238,7 +238,7 @@ export function DataTable({
                       aria-label="Select row"
                       checked={selected.includes(id)}
                       onChange={() => toggleRow(id)}
-                      className="mt-1 h-5 w-5 rounded border-surface-border text-primary-600 focus:ring-primary-600"
+                      className="mt-1 h-5 w-5 rounded border-surface-border text-primary focus:ring-primary"
                     />
                   )}
                   {onRowClick ? (

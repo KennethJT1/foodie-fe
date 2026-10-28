@@ -21,14 +21,18 @@ export function BottomTabs({ tabs, label = 'Main' }) {
               className={({ isActive }) =>
                 cn(
                   'relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] font-medium',
-                  isActive ? 'text-primary-700' : 'text-ink-muted',
+                  isActive
+                    ? 'font-semibold text-ink [&>span:first-child]:bg-primary'
+                    : 'text-ink-muted',
                 )
               }
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="flex h-7 w-12 items-center justify-center rounded-full transition-colors">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
               {text}
               {badge > 0 && (
-                <span className="absolute right-[calc(50%-20px)] top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] text-white">
+                <span className="absolute right-[calc(50%-20px)] top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-ink">
                   {badge}
                 </span>
               )}

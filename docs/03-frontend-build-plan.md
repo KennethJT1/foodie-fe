@@ -78,10 +78,10 @@ Nothing visible to users yet: these phases give every later screen its styling, 
 
 ### Phase 2 — Design tokens and Tailwind theme
 
-- [ ] `tailwind.config.js` with KJT Foodie colours, fonts, radius, shadows (Frontend Guidelines section 8)
-- [ ] Load Poppins and Inter; `src/styles/index.css` with base layer (body background `surface-page`, text `ink`)
+- [ ] `tailwind.config.js` with KJT Foodie colours, fonts, radius, shadows (Frontend Guidelines section 8; visual reference: Figma Food Delivery Website & App Design UI Kit)
+- [ ] Load Poppins; `src/styles/index.css` with base layer (body background `surface-page`, text `ink`)
 - [ ] `lib/cn.js` helper
-- [ ] Logo SVG, favicon, PWA icons in `public/`
+- [ ] Logo badge (`logo.webp`/`logo.png`), favicon, PWA icons in `public/`
 
 **Done when:** a test page shows every colour, heading size and spacing step correctly on phone and desktop.
 

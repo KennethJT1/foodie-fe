@@ -343,21 +343,22 @@ Each role sees only its own data; admin sees everything.
 
 None. All questions raised so far are decided.
 
-## 15. Brand (proposed)
+## 15. Brand
 
-KJT Foodie should feel warm, local and fast: food colours that suit Nigerian dishes, with a clean, simple layout that loads well on budget phones.
+KJT Foodie should feel warm, local and fast. The look follows the **Food Delivery Website & App Design UI Kit** (Digital Forest, Figma Community, CC BY 4.0): bright orange on clean white and light grey, deep navy for text and banners, and a green cart accent, with a simple layout that loads well on budget phones.
 
-| Element | Proposal |
+| Element | Decision |
 | --- | --- |
 | Name | KJT Foodie |
 | Tagline | "Good food, delivered fast" |
-| Logo | Wordmark "KJT Foodie" with a map-pin icon whose head is a plate with fork and spoon, showing food plus live delivery tracking |
-| Primary colour | Jollof orange `#E85D04`: buttons, links, logo |
-| Secondary colour | Naija green `#1B7F3B`: success states, "Delivered", vendor badges |
-| Accent colour | Plantain yellow `#FFB703`: ratings, likes, highlights |
-| Text colour | Charcoal `#1F2937` |
-| Background | Warm white `#FFF8F0` (cards in white `#FFFFFF`) |
-| Fonts | Poppins for headings, Inter for body text (both free Google Fonts) |
+| Logo | Round badge: "KJT FOODIE" lettering with a chef's hat, fork and spoon, and food icons (tomato, basil, cheese, burger, noodle bowl) on a cream disc with an orange-red ring; ribbon "Delicious adventures". Files in `public/` (`logo.webp`, `logo.png`, favicon and app icons) |
+| Primary colour | Orange `#FC8A06`: main buttons, active tabs and menu items, prices, highlights |
+| Dark colour | Deep navy `#03081F`: text, headings, store banners, dark buttons (log in / sign up) |
+| Secondary colour | Green `#028643`: cart, checkout, success states, "Delivered" |
+| Accent colour | Yellow `#FFB703`: rating stars |
+| Backgrounds | White `#FFFFFF` cards on light grey `#FAFAFA` pages; borders `#EEEEEE` |
+| Font | Poppins for all text (free Google Font) |
+| Shapes | Pill-shaped buttons, tabs and filter chips; cards with 12 px corners and a soft shadow |
 | Domain | kjtfoodie.com or kjtfoodie.ng (check availability before buying) |
 
-A designer should test the colours for readable contrast before the design is finalised.
+Text on orange uses navy, not white, so it stays readable (white on `#FC8A06` fails WCAG contrast). A designer should check any new colour pairing for contrast before it is used.

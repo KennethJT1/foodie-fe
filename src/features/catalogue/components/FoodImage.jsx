@@ -12,7 +12,7 @@ export function FoodImage({ src, alt, className, eager = false }) {
         role="img"
         aria-label={alt}
         className={cn(
-          'flex aspect-[4/3] w-full items-center justify-center bg-primary-50 text-primary-600',
+          'flex aspect-[4/3] w-full items-center justify-center bg-primary-50 text-primary',
           className,
         )}
       >

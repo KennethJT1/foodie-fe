@@ -22,7 +22,7 @@ export function StatCard({
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm text-ink-muted">{label}</p>
         {Icon && (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 text-primary">
             <Icon className="h-4 w-4" aria-hidden="true" />
           </span>
         )}

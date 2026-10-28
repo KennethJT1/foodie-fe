@@ -6,27 +6,31 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Figma "Food Delivery Website & App Design UI Kit" palette (BRD section 15)
         primary: {
-          DEFAULT: '#E85D04', // Jollof orange
-          50: '#FFF3EB',
-          100: '#FFE0CC',
-          600: '#C94F03',
-          700: '#A34002',
+          DEFAULT: '#FC8A06', // Orange
+          50: '#FFF5E8',
+          100: '#FFE6C7',
+          600: '#E07A00',
+          700: '#A35900',
         },
-        secondary: { DEFAULT: '#1B7F3B', 50: '#EAF6EE', 600: '#166A31' }, // Naija green
-        accent: { DEFAULT: '#FFB703', 50: '#FFF8E1' }, // Plantain yellow
-        ink: { DEFAULT: '#1F2937', muted: '#6B7280' },
-        surface: { DEFAULT: '#FFFFFF', page: '#FFF8F0', border: '#E5E7EB' },
+        secondary: { DEFAULT: '#028643', 50: '#E6F4EC', 600: '#016B35' }, // Cart green
+        accent: { DEFAULT: '#FFB703', 50: '#FFF8E1' }, // Rating yellow
+        ink: { DEFAULT: '#03081F', muted: '#5B6070' }, // Deep navy
+        surface: { DEFAULT: '#FFFFFF', page: '#FAFAFA', muted: '#F3F3F3', border: '#EEEEEE' },
         danger: { DEFAULT: '#DC2626', 50: '#FEF2F2' },
         warning: { DEFAULT: '#D97706', 50: '#FFFBEB' },
         info: { DEFAULT: '#2563EB', 50: '#EFF6FF' },
       },
       fontFamily: {
         heading: ['Poppins', 'sans-serif'],
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Poppins', 'sans-serif'],
       },
       borderRadius: { card: '0.75rem' },
-      boxShadow: { card: '0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.1)' },
+      boxShadow: {
+        card: '0 2px 8px rgb(3 8 31 / 0.06), 0 1px 2px rgb(3 8 31 / 0.04)',
+        pop: '0 12px 32px rgb(3 8 31 / 0.12)',
+      },
       minHeight: { tap: '44px' },
       minWidth: { tap: '44px' },
     },

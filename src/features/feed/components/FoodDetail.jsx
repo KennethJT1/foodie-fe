@@ -53,7 +53,7 @@ export function FoodDetail({ id }) {
           </div>
           <Link
             to={ROUTES.storefront(vendor.slug)}
-            className="flex items-center gap-3 rounded-card border border-surface-border p-3 hover:border-primary-600"
+            className="flex items-center gap-3 rounded-card border border-surface-border p-3 hover:border-primary"
           >
             <Avatar src={vendor.logo} name={vendor.name} shape="square" />
             <div className="min-w-0 flex-1">

@@ -2,7 +2,7 @@ import { Clock, MapPin, Star, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { EmptyState, ErrorState, Skeleton, SkeletonCards } from '@/components/feedback';
-import { Avatar, Badge, Button } from '@/components/ui';
+import { Avatar, Button } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
 import { ShareButton } from '@/features/feed';
 import { formatCount, formatDistance, formatRating } from '@/lib/format';
@@ -36,46 +36,31 @@ export function Storefront({ slug, children }) {
     return <ErrorState title="We couldn't load this store" error={error} onRetry={refetch} />;
   }
 
+  const hoursLabel = openingLabel(vendor.openingHours, {
+    isOpen: vendor.isOpen,
+    isPaused: vendor.isPaused,
+  });
+
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-card bg-surface shadow-card">
-        <div className="h-32 bg-primary-50 md:h-52">
-          {vendor.cover && (
-            <img
-              src={vendor.cover}
-              alt={`${vendor.name} cover`}
-              className="h-full w-full object-cover"
-              width={1200}
-              height={400}
-            />
-          )}
-        </div>
-        <div className="space-y-3 p-4 md:p-6">
-          <div className="-mt-12 flex items-end gap-3 md:-mt-16">
-            <Avatar
-              src={vendor.logo}
-              name={vendor.name}
-              size="xl"
-              shape="square"
-              className="border-4 border-surface shadow-card"
-            />
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold">{vendor.name}</h1>
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
-                <span className="inline-flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-accent text-accent" aria-hidden="true" />
-                  {formatRating(vendor.rating)} ({formatCount(vendor.ratingCount)} ratings)
-                </span>
-                <span>{formatCount(vendor.followersCount)} followers</span>
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-4 w-4" aria-hidden="true" />
-                  {vendor.address?.area}, {vendor.city} · {formatDistance(vendor.distanceM)}
-                </span>
-              </p>
-            </div>
-            <div className="flex gap-2">
+      {/* Navy banner (UI kit): details on the left, cover with logo and rating box on the right */}
+      <section className="relative overflow-hidden rounded-2xl bg-ink text-white">
+        <div className="grid gap-6 p-5 md:grid-cols-[1fr_minmax(0,460px)] md:p-10">
+          <div className="flex flex-col gap-4">
+            {vendor.description && <p className="text-sm text-white/80">{vendor.description}</p>}
+            <h1 className="text-3xl font-bold text-white md:text-5xl">{vendor.name}</h1>
+            <ul className="flex flex-wrap gap-2 text-sm">
+              <li className="inline-flex items-center gap-1.5 rounded-full border border-white/70 px-4 py-2">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                Prep about {vendor.prepTimeMins} min
+              </li>
+              <li className="inline-flex items-center gap-1.5 rounded-full border border-white/70 px-4 py-2">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                {vendor.address?.area}, {vendor.city}
+                {vendor.distanceM != null && ` · ${formatDistance(vendor.distanceM)}`}
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-2">
               <FollowButton vendor={vendor} />
               <ShareButton
                 variant="outline"
@@ -85,35 +70,66 @@ export function Storefront({ slug, children }) {
                 path={ROUTES.storefront(vendor.slug)}
               />
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge tone={vendor.isOpen ? 'success' : 'neutral'} dot>
-              {vendor.isOpen ? 'Open now' : 'Closed'}
-            </Badge>
-            <span className="text-ink-muted">
-              {openingLabel(vendor.openingHours, {
-                isOpen: vendor.isOpen,
-                isPaused: vendor.isPaused,
-              })}
-            </span>
-            <span className="inline-flex items-center gap-1 text-ink-muted">
+            <p className="mt-auto inline-flex w-fit items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-ink">
               <Clock className="h-4 w-4" aria-hidden="true" />
-              Prep about {vendor.prepTimeMins} min
-            </span>
+              <span>{vendor.isOpen ? 'Open now' : 'Closed'}</span>
+              <span className="font-normal">· {hoursLabel}</span>
+            </p>
           </div>
-          {vendor.description && <p className="text-sm">{vendor.description}</p>}
-          <details className="group text-sm">
-            <summary className="cursor-pointer font-medium text-primary-700">Opening hours</summary>
-            <OpeningHours hours={vendor.openingHours} className="mt-2" />
-          </details>
+
+          <div className="relative">
+            <div className="aspect-[16/10] overflow-hidden rounded-xl bg-primary-50">
+              {vendor.cover && (
+                <img
+                  src={vendor.cover}
+                  alt={`${vendor.name} cover`}
+                  className="h-full w-full object-cover"
+                  width={1200}
+                  height={400}
+                />
+              )}
+            </div>
+            <Avatar
+              src={vendor.logo}
+              name={vendor.name}
+              size="xl"
+              shape="square"
+              className="absolute right-3 top-3 border-4 border-white shadow-pop"
+            />
+            <div className="absolute -bottom-3 left-3 rounded-xl bg-surface px-4 py-2.5 text-ink shadow-pop md:-left-8">
+              <p className="text-3xl font-bold leading-none">{formatRating(vendor.rating)}</p>
+              <p className="mt-1 flex items-center gap-0.5" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star
+                    key={n}
+                    className={
+                      n <= Math.round(vendor.rating)
+                        ? 'h-3.5 w-3.5 fill-primary text-primary'
+                        : 'h-3.5 w-3.5 text-gray-300'
+                    }
+                  />
+                ))}
+              </p>
+              <p className="text-xs text-ink-muted">
+                <span className="sr-only">Rated {formatRating(vendor.rating)} out of 5 from </span>
+                {formatCount(vendor.ratingCount)} reviews · {formatCount(vendor.followersCount)}{' '}
+                followers
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <details className="group rounded-card bg-surface p-4 text-sm shadow-card">
+        <summary className="cursor-pointer font-semibold">Opening hours and delivery</summary>
+        <OpeningHours hours={vendor.openingHours} className="mt-3" />
+      </details>
 
       <section aria-labelledby="menu-title" className="space-y-3">
-        <h2 id="menu-title" className="text-lg font-semibold">
-          Menu
+        <h2 id="menu-title" className="text-xl font-bold md:text-2xl">
+          All offers from {vendor.name}
         </h2>
-        <StorefrontMenu vendorId={vendor.id} />
+        <StorefrontMenu vendor={vendor} />
       </section>
       {typeof children === 'function' ? children(vendor) : children}
     </div>

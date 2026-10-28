@@ -37,7 +37,7 @@ export function OptionGroupsPicker({ groups = [], value = {}, onChange, errors =
                       disabled={disabled}
                       onChange={() => onChange(toggleOption(value, g, o.id))}
                       className={cn(
-                        'h-5 w-5 border-surface-border text-primary-600 focus:ring-primary-600',
+                        'h-5 w-5 border-surface-border text-primary focus:ring-primary',
                         !single && 'rounded',
                       )}
                     />

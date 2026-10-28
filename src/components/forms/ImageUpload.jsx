@@ -119,7 +119,7 @@ export function ImageUploadControl({
           <label
             htmlFor={id}
             className={cn(
-              'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center text-sm text-ink-muted transition-colors focus-within:ring-2 focus-within:ring-primary-600 hover:border-primary-600 hover:text-primary-700',
+              'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-center text-sm text-ink-muted transition-colors focus-within:ring-2 focus-within:ring-primary hover:border-primary hover:text-primary-700',
               error ? 'border-danger' : 'border-surface-border',
               aspect,
             )}
