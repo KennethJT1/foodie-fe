@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { queryKeys } from '@/constants/query-keys';
 import { refreshAccessToken } from '@/lib/api-client';
@@ -83,6 +83,17 @@ export const useMe = (options = {}) => {
     if (query.data) useAuthStore.getState().setUser(query.data);
   }, [query.data]);
   return query;
+};
+
+/** Re-reads /me after a change the guards depend on (approval, plan status) and stores it. */
+export const useSyncSession = () => {
+  const qc = useQueryClient();
+  return useCallback(async () => {
+    const user = await authApi.me();
+    useAuthStore.getState().setUser(user);
+    qc.setQueryData(queryKeys.me, user);
+    return user;
+  }, [qc]);
 };
 
 export const useUpdateMe = () => {

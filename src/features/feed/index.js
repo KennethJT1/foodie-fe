@@ -7,7 +7,6 @@ export { HomeFeed } from './components/HomeFeed';
 export { LikeButton } from './components/LikeButton';
 export { LikedFoodList } from './components/LikedFoodList';
 export { ReportDialog } from './components/ReportDialog';
-export { ShareButton } from './components/ShareButton';
 export {
   useAddComment,
   useComments,

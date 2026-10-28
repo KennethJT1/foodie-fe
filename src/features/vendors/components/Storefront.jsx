@@ -2,9 +2,8 @@ import { Clock, MapPin, Star, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { EmptyState, ErrorState, Skeleton, SkeletonCards } from '@/components/feedback';
-import { Avatar, Button } from '@/components/ui';
+import { Avatar, Button, ShareButton } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
-import { ShareButton } from '@/features/feed';
 import { formatCount, formatDistance, formatRating } from '@/lib/format';
 import { openingLabel } from '@/lib/opening-hours';
 

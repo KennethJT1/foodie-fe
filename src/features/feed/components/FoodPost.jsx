@@ -1,13 +1,12 @@
 import { MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { Avatar, Badge, Button } from '@/components/ui';
+import { Avatar, Badge, Button, ShareButton } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
 import { FoodImage } from '@/features/catalogue';
 import { formatCount, formatDistance, formatNaira, formatRelative } from '@/lib/format';
 
 import { LikeButton } from './LikeButton';
-import { ShareButton } from './ShareButton';
 
 /**
  * A food post in the home feed (UI kit "deal" card): photo with a dark gradient, price pill,

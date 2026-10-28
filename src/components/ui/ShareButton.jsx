@@ -1,7 +1,8 @@
 import { Share2 } from 'lucide-react';
 
-import { toast } from '@/components/feedback';
-import { Button } from '@/components/ui';
+import { toast } from '@/components/feedback/toast';
+
+import { Button } from './Button';
 
 /** Shares to WhatsApp and other apps with the native share sheet; copies the link otherwise. */
 export function ShareButton({
