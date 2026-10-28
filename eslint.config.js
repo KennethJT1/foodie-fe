@@ -33,7 +33,8 @@ export default [
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react/prop-types': 'off',
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // Shared component files also export their cva variants and helpers on purpose.
+      'react-refresh/only-export-components': 'off',
       'import/no-unresolved': 'off',
       'import/no-named-as-default-member': 'off',
       'import/order': [

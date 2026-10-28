@@ -7,8 +7,13 @@ import '@/styles/index.css';
 async function boot() {
   // Statically false in production builds without mocks, so src/mocks is tree-shaken away.
   if (import.meta.env.VITE_USE_MOCKS === 'true') {
-    const { startMocks } = await import('./mocks/browser');
-    await startMocks();
+    try {
+      const { startMocks } = await import('./mocks/browser');
+      await startMocks();
+    } catch (error) {
+      // Some embedded browsers block service workers; render anyway so the UI can be inspected.
+      console.error('[KJT Foodie] Mock API failed to start. API calls will fail.', error);
+    }
   }
 
   createRoot(document.getElementById('root')).render(
