@@ -17,6 +17,26 @@ npm run dev
 
 The app runs at http://localhost:5173. With `VITE_USE_MOCKS=true` it needs no backend.
 
+## Demo accounts (mock mode)
+
+Every account uses the password `password123`; every SMS code is `123456`. In development a
+**Demo accounts** button (bottom right) switches between them in one tap.
+
+| Account                                          | Email                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------- |
+| Customer (Ada Okafor)                            | `customer@kjtfoodie.test`                                           |
+| Vendor, Pro plan (Mama Put)                      | `vendor@kjtfoodie.test`                                             |
+| Vendor, plan expired                             | `expired.vendor@kjtfoodie.test`                                     |
+| Vendor, not onboarded yet                        | `new.vendor@kjtfoodie.test`                                         |
+| Rider (Tunde Bakare)                             | `rider@kjtfoodie.test`                                              |
+| Rider, not onboarded yet                         | `new.rider@kjtfoodie.test`                                          |
+| Admin: Super admin                               | `super@kjtfoodie.test`                                              |
+| Admin: Support / Finance / Dispatch / Onboarding | `support@` / `finance@` / `dispatch@` / `onboarding@kjtfoodie.test` |
+
+Mock data lives in your browser's localStorage. Run `window.__kjtMocks.resetDb()` in the
+console to start fresh. `localStorage.setItem('kjt-mock-chaos', '0.1')` makes 10% of reads fail
+so you can check error states.
+
 ## Scripts
 
 | Script               | What it does                        |

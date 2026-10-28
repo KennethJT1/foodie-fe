@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { ForgotPasswordForm } from '@/features/auth';
 
 export default function ForgotPasswordPage() {
-  return <ComingSoon title="Forgot password" phase={8} />;
+  return <ForgotPasswordForm />;
 }

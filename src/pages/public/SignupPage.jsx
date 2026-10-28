@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { Navigate, useParams } from 'react-router-dom';
+
+import { ROUTES } from '@/constants/routes';
+import { SignupForm } from '@/features/auth';
+
+const ROLES = ['customer', 'vendor', 'rider'];
 
 export default function SignupPage() {
-  return <ComingSoon title="Sign up" phase={8} />;
+  const { role } = useParams();
+  if (!ROLES.includes(role)) return <Navigate to={ROUTES.signup('customer')} replace />;
+  return <SignupForm role={role} />;
 }

@@ -19,16 +19,16 @@ kjt-foodie-web/
 └─ src/ ...
 ```
 
-| Document | Frontend repo | Backend repo |
-| --- | --- | --- |
-| Business Requirements Document | `docs/01-brd.md` | `docs/01-brd.md` |
-| Frontend Guidelines | `docs/02-frontend-guidelines.md` | — |
-| Frontend Build Plan | `docs/03-frontend-build-plan.md` | — |
-| Implementation Plan | `docs/04-implementation-plan.md` | `docs/05-implementation-plan.md` |
-| Backend Architecture | — | `docs/02-backend-architecture.md` |
-| Database Schema | — | `docs/03-database-schema.md` |
-| Backend Build Plan | — | `docs/04-backend-build-plan.md` |
-| API contract (OpenAPI) | `docs/api/openapi.yaml` (copy) | `docs/openapi/` (master) |
+| Document                       | Frontend repo                      | Backend repo                        |
+| ------------------------------ | ---------------------------------- | ----------------------------------- |
+| Business Requirements Document | `docs/01-brd.md`                 | `docs/01-brd.md`                  |
+| Frontend Guidelines            | `docs/02-frontend-guidelines.md` | —                                  |
+| Frontend Build Plan            | `docs/03-frontend-build-plan.md` | —                                  |
+| Implementation Plan            | `docs/04-implementation-plan.md` | `docs/05-implementation-plan.md`  |
+| Backend Architecture           | —                                 | `docs/02-backend-architecture.md` |
+| Database Schema                | —                                 | `docs/03-database-schema.md`      |
+| Backend Build Plan             | —                                 | `docs/04-backend-build-plan.md`   |
+| API contract (OpenAPI)         | `docs/api/openapi.yaml` (copy)   | `docs/openapi/` (master)          |
 
 If you prefer one place for everything, make a third repo `kjt-foodie-docs` and link to it from both READMEs instead of copying the BRD and plan.
 
@@ -36,26 +36,26 @@ If you prefer one place for everything, make a third repo `kjt-foodie-docs` and 
 
 The frontend is built in 18 phases over weeks 1–14, from the foundations no screen can live without, through each role in the order money flows, to sign-off; phase 18 happens later, while the backend is built. Never start a phase before the ones it depends on are done.
 
-| # | Phase | Sprint (weeks) | Needs |
-| --- | --- | --- | --- |
-| 1 | Project setup | FE0 (1–2) | — |
-| 2 | Design tokens and Tailwind theme | FE0 (1–2) | 1 |
-| 3 | Core `lib`, stores and constants | FE0 (1–2) | 1 |
-| 4 | Mock API foundation (MSW) | FE0 (1–2) | 3 |
-| 5 | UI primitives | FE1 (3–4) | 2 |
-| 6 | Data, form and feedback components | FE1 (3–4) | 5 |
-| 7 | Layouts, navigation and guards | FE1 (3–4) | 5, 3 |
-| 8 | Authentication | FE1 (3–4) | 4, 6, 7 |
-| 9 | Customer discovery and social | FE2 (5–6) | 8 |
-| 10 | Cart, checkout and orders | FE3 (7–8) | 9 |
-| 11 | Live tracking, reviews and refund requests | FE3 (7–8) | 10 |
-| 12 | Vendor onboarding and subscription | FE4 (9–10) | 8 |
-| 13 | Vendor operations | FE4 (9–10) | 12, 10 |
-| 14 | Rider app | FE5 (11–12) | 11 |
-| 15 | Admin core | FE5 (11–12) | 12, 14 |
-| 16 | Admin finance and operations | FE6 (13–14) | 15 |
-| 17 | Polish, tests and sign-off | FE6 (13–14) | all |
-| 18 | Switch to the real backend | Weeks 15–28 | Backend phases |
+| #  | Phase                                      | Sprint (weeks) | Needs          |
+| -- | ------------------------------------------ | -------------- | -------------- |
+| 1  | Project setup                              | FE0 (1–2)     | —             |
+| 2  | Design tokens and Tailwind theme           | FE0 (1–2)     | 1              |
+| 3  | Core `lib`, stores and constants         | FE0 (1–2)     | 1              |
+| 4  | Mock API foundation (MSW)                  | FE0 (1–2)     | 3              |
+| 5  | UI primitives                              | FE1 (3–4)     | 2              |
+| 6  | Data, form and feedback components         | FE1 (3–4)     | 5              |
+| 7  | Layouts, navigation and guards             | FE1 (3–4)     | 5, 3           |
+| 8  | Authentication                             | FE1 (3–4)     | 4, 6, 7        |
+| 9  | Customer discovery and social              | FE2 (5–6)     | 8              |
+| 10 | Cart, checkout and orders                  | FE3 (7–8)     | 9              |
+| 11 | Live tracking, reviews and refund requests | FE3 (7–8)     | 10             |
+| 12 | Vendor onboarding and subscription         | FE4 (9–10)    | 8              |
+| 13 | Vendor operations                          | FE4 (9–10)    | 12, 10         |
+| 14 | Rider app                                  | FE5 (11–12)   | 11             |
+| 15 | Admin core                                 | FE5 (11–12)   | 12, 14         |
+| 16 | Admin finance and operations               | FE6 (13–14)   | 15             |
+| 17 | Polish, tests and sign-off                 | FE6 (13–14)   | all            |
+| 18 | Switch to the real backend                 | Weeks 15–28   | Backend phases |
 
 Each phase below lists what to build (with file paths from the Frontend Guidelines) and how you know it is done.
 
@@ -275,15 +275,15 @@ The rider app closes the delivery loop; the admin dashboard comes last because i
 
 As each backend phase finishes, the matching mock handlers are deleted and that feature runs on the real staging API.
 
-| Backend phase finishes | Frontend switches off mocks |
-| --- | --- |
-| Auth, roles and permissions | `features/auth`, profile, addresses, admin users |
-| Onboarding, uploads, settings | Vendor and rider onboarding, admin approvals, settings |
-| Plans and subscriptions | Plans, subscription pages, admin plans |
-| Catalogue and social | Feed, search, storefront, menu management, likes, comments, moderation |
-| Orders and payments + real time | Cart, checkout, orders for all roles, payments, live order queue |
-| Dispatch, GPS, rider payouts | Rider app, live tracking, admin live map, payout statements |
-| Refunds, support, notifications, reports | Refunds, support, notifications, admin reports, audit log |
+| Backend phase finishes                   | Frontend switches off mocks                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------- |
+| Auth, roles and permissions              | `features/auth`, profile, addresses, admin users                     |
+| Onboarding, uploads, settings            | Vendor and rider onboarding, admin approvals, settings                 |
+| Plans and subscriptions                  | Plans, subscription pages, admin plans                                 |
+| Catalogue and social                     | Feed, search, storefront, menu management, likes, comments, moderation |
+| Orders and payments + real time          | Cart, checkout, orders for all roles, payments, live order queue       |
+| Dispatch, GPS, rider payouts             | Rider app, live tracking, admin live map, payout statements            |
+| Refunds, support, notifications, reports | Refunds, support, notifications, admin reports, audit log              |
 
 For each switch:
 
