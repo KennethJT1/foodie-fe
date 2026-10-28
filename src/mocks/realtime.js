@@ -28,6 +28,7 @@ const running = new Map(); // orderId -> { timer, subscribers, route, index }
 const vendorWatchers = new Map(); // vendorId -> { count, timer }
 const riderWatchers = new Map(); // riderId -> count
 const offerTimers = new Map(); // riderId -> timeout
+let liveMap = { count: 0, timer: null };
 let registered = false;
 
 export function configureOrderSimulation(next) {
@@ -42,6 +43,8 @@ export function stopOrderSimulations() {
   riderWatchers.clear();
   offerTimers.forEach((t) => clearTimeout(t));
   offerTimers.clear();
+  clearInterval(liveMap.timer);
+  liveMap = { count: 0, timer: null };
 }
 
 /** Listens for subscriptions from the app. Safe to call more than once. */
@@ -61,6 +64,69 @@ export function registerRealtime() {
     else riderWatchers.set(riderId, n);
   });
   onClientEmit('rider:location', (payload) => receiveRiderLocation(payload));
+  onClientEmit('admin:live-map:subscribe', () => {
+    liveMap.count += 1;
+    if (!liveMap.timer && options.enabled)
+      liveMap.timer = setInterval(() => {
+        driftIdleRiders();
+        serverEmit('admin:live-map', liveMapSnapshot());
+      }, options.stepMs);
+  });
+  onClientEmit('admin:live-map:unsubscribe', () => {
+    liveMap.count = Math.max(0, liveMap.count - 1);
+    if (!liveMap.count) {
+      clearInterval(liveMap.timer);
+      liveMap.timer = null;
+    }
+  });
+}
+
+/** Online riders and active deliveries for the admin live map (FR-GPS-04). */
+export function liveMapSnapshot() {
+  const active = db.orders.filter((o) =>
+    [ORDER_STATUS.READY_FOR_PICKUP, ORDER_STATUS.RIDER_ASSIGNED, ORDER_STATUS.PICKED_UP].includes(
+      o.status,
+    ),
+  );
+  const busy = new Map(active.filter((o) => o.riderId).map((o) => [o.riderId, o]));
+  return {
+    riders: db.riders
+      .filter((r) => r.isOnline && r.lat != null)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        city: r.city,
+        vehicleType: r.vehicleType,
+        lat: r.lat,
+        lng: r.lng,
+        lastSeenAt: r.lastSeenAt ?? null,
+        orderId: busy.get(r.id)?.id ?? null,
+      })),
+    deliveries: active.map((o) => {
+      const v = findById('vendors', o.vendorId);
+      return {
+        orderId: o.id,
+        code: o.code,
+        status: o.status,
+        city: v?.city ?? o.address.city,
+        riderId: o.riderId,
+        vendor: { name: o.vendorName, lat: v?.lat, lng: v?.lng },
+        dropoff: { area: o.address.area, lat: o.address.lat, lng: o.address.lng },
+        etaMins: o.etaMins,
+      };
+    }),
+    at: new Date().toISOString(),
+  };
+}
+
+/** Idle online riders wander a little so the demo map looks alive. */
+function driftIdleRiders() {
+  for (const r of db.riders) {
+    if (!r.isOnline || r.lat == null || hasActiveDelivery(r.id)) continue;
+    r.lat += (Math.random() - 0.5) * 0.002;
+    r.lng += (Math.random() - 0.5) * 0.002;
+    r.lastSeenAt = new Date().toISOString();
+  }
 }
 
 /** A rider's phone reports where they are; customers watching their order see it move. */

@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { AdminOverview } from '@/features/reports';
 
 export default function OverviewPage() {
-  return <ComingSoon title="Overview" phase={15} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <AdminOverview />
+    </div>
+  );
 }

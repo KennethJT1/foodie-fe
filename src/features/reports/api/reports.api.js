@@ -8,4 +8,8 @@ export const reportsApi = {
   vendorSales: (params) => api.get('/vendor/sales', { params }).then(withMeta),
   vendorSalesDaily: (params) => api.get('/vendor/sales/daily', { params }).then(unwrap),
   vendorEngagement: () => api.get('/vendor/engagement').then(unwrap),
+  adminOverview: (params) => api.get('/admin/overview', { params }).then(unwrap),
+  customers: (params) => api.get('/admin/customers', { params }).then(withMeta),
+  setCustomerStatus: ({ id, status, reason }) =>
+    api.post(`/admin/customers/${id}/status`, { status, reason }).then(unwrap),
 };

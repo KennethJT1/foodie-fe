@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { AdminLiveMap } from '@/features/tracking';
 
 export default function LiveMapPage() {
-  return <ComingSoon title="Live map" phase={15} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <AdminLiveMap />
+    </div>
+  );
 }

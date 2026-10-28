@@ -1,7 +1,10 @@
 // Public exports of the vendors feature. Other features import only from here.
+export { adminVendorsApi } from './api/admin-vendors.api';
 export { onboardingApi } from './api/onboarding.api';
 export { storeApi } from './api/store.api';
 export { vendorsApi } from './api/vendors.api';
+export { AdminVendorDetail } from './components/admin/AdminVendorDetail';
+export { AdminVendorList } from './components/admin/AdminVendorList';
 export { FollowButton } from './components/FollowButton';
 export { FollowedVendorsList } from './components/FollowedVendorsList';
 export { OnboardingWizard } from './components/onboarding/OnboardingWizard';

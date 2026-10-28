@@ -9,4 +9,6 @@ export const ordersApi = {
   reject: ({ id, reason }) => api.post(`/orders/${id}/reject`, { reason }).then(unwrap),
   markPreparing: (id) => api.post(`/orders/${id}/preparing`).then(unwrap),
   markReady: (id) => api.post(`/orders/${id}/ready`).then(unwrap),
+  // Admin (Dispatch)
+  reassign: ({ id, riderId }) => api.post(`/admin/orders/${id}/reassign`, { riderId }).then(unwrap),
 };

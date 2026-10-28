@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { useParams } from 'react-router-dom';
+
+import { AdminRiderDetail } from '@/features/riders';
 
 export default function RiderDetailPage() {
-  return <ComingSoon title="Rider" phase={15} />;
+  const { riderId } = useParams();
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <AdminRiderDetail id={riderId} />
+    </div>
+  );
 }

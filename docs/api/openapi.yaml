@@ -47,6 +47,11 @@ tags:
       Real time: while online the app emits `rider:subscribe` / `rider:unsubscribe` `{ riderId }`
       and `rider:location` `{ riderId, lat, lng, heading }` every 5–10 s; the server emits
       `rider:job:offer` (a JobOffer) and forwards the position to the customer as `rider:location`.
+  - name: Admin
+    description: |
+      Admin dashboard. Each endpoint needs the named permission (`x-permission`); the server
+      re-checks it. Live map: the client emits `admin:live-map:subscribe` / `:unsubscribe`; the
+      server pushes a LiveMap snapshot as `admin:live-map` every few seconds.
   - name: Notifications
     description: |
       In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
@@ -1633,6 +1638,251 @@ paths:
       summary: Monthly payout statements, newest first
       responses:
         '200': { description: 'Array of { id, month, trips, deliveryFees, payoutPct, amount, adjustments, status, reference, approvedAt, paidAt }' }
+
+  /admin/overview:
+    get:
+      tags: [Admin]
+      summary: GMV and orders today, active deliveries, MRR, delivery-fee revenue, sign-ups, work waiting
+      x-permission: dashboard.view
+      parameters: [{ name: days, in: query, schema: { type: integer, default: 14 } }]
+      responses:
+        '200':
+          description: |
+            `{ gmvToday, gmvChange, ordersToday, ordersChange, activeDeliveries, activeOrders, mrr,
+            payingVendors, deliveryFeeRevenue, signups { customers, vendors, riders }, onlineRiders,
+            pending { vendors, riders, refunds }, series [{ date, orders, gmv }] }`
+
+  /admin/vendors:
+    get:
+      tags: [Admin]
+      summary: Vendors (not drafts) with filters
+      x-permission: vendors.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: approvalStatus, in: query, schema: { type: string, enum: [pending, approved, rejected, suspended] } }
+        - { name: subscriptionStatus, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string, enum: [restaurant, home_cook] } }
+        - { name: city, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Page of vendor rows }
+
+  /admin/vendors/{id}:
+    get:
+      tags: [Admin]
+      summary: Vendor detail with documents, full bank account, plan and 30-day numbers
+      x-permission: vendors.view
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin vendor detail }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/vendors/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a pending application; the owner is notified
+      x-permission: vendors.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin vendor detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/vendors/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a pending application with a reason the owner sees
+      x-permission: vendors.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [reason], properties: { reason: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Admin vendor detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/vendors/{id}/suspend:
+    post:
+      tags: [Admin]
+      summary: Suspend an approved account with a reason
+      x-permission: vendors.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [reason], properties: { reason: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Admin vendor detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/vendors/{id}/reinstate:
+    post:
+      tags: [Admin]
+      summary: Lift a suspension
+      x-permission: vendors.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin vendor detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/vendors/{id}/bank-change/{decision}:
+    post:
+      tags: [Admin]
+      summary: Approve or reject a vendor's new settlement account (BR-PAY-02)
+      x-permission: vendors.approve
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: decision, in: path, required: true, schema: { type: string, enum: [approve, reject] } }
+      responses:
+        '200': { description: Admin vendor detail }
+        '404': { description: No pending bank change }
+
+  /admin/riders:
+    get:
+      tags: [Admin]
+      summary: Riders (not drafts) with online status, trips and rating
+      description: With `nearOrderId`, only free online riders, nearest to that order's vendor first (reassignment).
+      x-permission: riders.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: approvalStatus, in: query, schema: { type: string } }
+        - { name: online, in: query, schema: { type: boolean } }
+        - { name: vehicleType, in: query, schema: { type: string } }
+        - { name: nearOrderId, in: query, schema: { type: string } }
+      responses:
+        '200': { description: 'Page of rider rows { id, name, phone, city, vehicleType, approvalStatus, isOnline, isBusy, rating, tripsCount, distanceM? }' }
+
+  /admin/riders/{id}:
+    get:
+      tags: [Admin]
+      summary: Rider detail with licence, guarantor, documents, bank and recent trips
+      x-permission: riders.view
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin rider detail }
+
+  /admin/riders/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a pending application; the owner is notified
+      x-permission: riders.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin rider detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/riders/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a pending application with a reason the owner sees
+      x-permission: riders.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [reason], properties: { reason: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Admin rider detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/riders/{id}/suspend:
+    post:
+      tags: [Admin]
+      summary: Suspend an approved account with a reason
+      x-permission: riders.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [reason], properties: { reason: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Admin rider detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/riders/{id}/reinstate:
+    post:
+      tags: [Admin]
+      summary: Lift a suspension
+      x-permission: riders.approve
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Admin rider detail }
+        '409': { description: Wrong status for this decision }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/customers:
+    get:
+      tags: [Admin]
+      summary: Customers with order counts
+      x-permission: customers.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended, banned] } }
+      responses:
+        '200': { description: Page of customers }
+
+  /admin/customers/{id}/status:
+    post:
+      tags: [Admin]
+      summary: Suspend, ban (reason required) or restore a customer
+      x-permission: customers.ban
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, suspended, banned] }
+                reason: { type: string }
+      responses:
+        '200': { description: '{ id, status }' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/orders/{id}/reassign:
+    post:
+      tags: [Admin]
+      summary: Give an order to another rider before pickup (manual dispatch)
+      x-permission: orders.reassign
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [riderId], properties: { riderId: { type: string } } }
+      responses:
+        '200': { description: Order (rider_assigned with the new rider) }
+        '409': { description: Already picked up }
+        '422': { description: Rider not approved, already has it, or busy (fieldErrors.riderId) }
+
+  /admin/live-map:
+    get:
+      tags: [Admin]
+      summary: Online riders and active deliveries (FR-GPS-04)
+      x-permission: live_map.view
+      responses:
+        '200':
+          description: |
+            LiveMap `{ riders: [{ id, name, city, vehicleType, lat, lng, lastSeenAt, orderId }],
+            deliveries: [{ orderId, code, status, city, riderId, vendor { name, lat, lng },
+            dropoff { area, lat, lng }, etaMins }], at }`
 
 components:
   securitySchemes:

@@ -1,4 +1,5 @@
 import { addressHandlers } from './addresses';
+import { adminHandlers } from './admin';
 import { authHandlers } from './auth';
 import { catalogueHandlers } from './catalogue';
 import { categoryHandlers } from './categories';
@@ -36,5 +37,6 @@ export const handlers = [
   ...menuHandlers,
   ...vendorStoreHandlers,
   ...riderHandlers,
+  ...adminHandlers,
   ...devHandlers,
 ];
