@@ -1,2 +1,5 @@
 // Public exports of the tracking feature. Other features import only from here.
-export {};
+export { LiveOrderTracker } from './components/LiveOrderTracker';
+export { LiveTrackingMap } from './components/LiveTrackingMap';
+export { useOrderLive } from './hooks/useOrderLive';
+export { applyLocationEvent, applyStatusEvent } from './lib/live-events';

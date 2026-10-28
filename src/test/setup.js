@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { registerMockSocket } from '@/lib/socket';
 import { isDbDirty, resetDb } from '@/mocks/db';
+import { configureOrderSimulation, registerRealtime, stopOrderSimulations } from '@/mocks/realtime';
 import { server } from '@/mocks/server';
 import { createMockSocket } from '@/mocks/socket';
 import { useAuthStore } from '@/stores/auth-store';
@@ -11,10 +12,13 @@ import { useCartStore } from '@/stores/cart-store';
 import { useUiStore } from '@/stores/ui-store';
 
 registerMockSocket(createMockSocket);
+registerRealtime();
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
+  stopOrderSimulations();
+  configureOrderSimulation({ enabled: false });
   useAuthStore.setState({ user: null, accessToken: null, status: 'idle' });
   useCartStore.getState().clear();
   useUiStore.setState({ isCartOpen: false, isMobileNavOpen: false });

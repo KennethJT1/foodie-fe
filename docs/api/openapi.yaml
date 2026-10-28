@@ -29,6 +29,14 @@ tags:
   - name: Account
   - name: Orders
   - name: Payments
+  - name: Reviews
+  - name: Refunds
+  - name: Notifications
+    description: |
+      In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
+      `order:unsubscribe` `{ orderId }`; the server emits `order:status`
+      `{ orderId, status, statusHistory, updatedAt, rider?, delivery? }` and `rider:location`
+      `{ orderId, riderId, lat, lng, heading, etaMins, at }`.
 
 paths:
   /health:
@@ -709,6 +717,217 @@ paths:
         '200': { description: Cancelled order }
         '409': { description: Already accepted (error.code CANNOT_CANCEL) }
 
+  /orders/{id}/reviews:
+    post:
+      tags: [Reviews]
+      summary: >-
+        Customer rates the vendor or the rider of their delivered order (FR-SOC-06); once per
+        target. Updates the target's rating and sets `ratedVendor` / `ratedRider` on the order.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetType, rating]
+              properties:
+                targetType: { type: string, enum: [vendor, rider] }
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string, maxLength: 500 }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Review' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: Not delivered yet, or already rated }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /reviews:
+    get:
+      tags: [Reviews]
+      security: []
+      summary: Public reviews of a vendor or rider
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: targetType, in: query, schema: { type: string, enum: [vendor, rider] } }
+        - { name: targetId, in: query, schema: { type: string } }
+        - { name: rating, in: query, description: comma = any of, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Review' } }
+
+  /refunds:
+    get:
+      tags: [Refunds]
+      summary: >-
+        Refund requests scoped by role: customers their own, vendors their store's, admins
+        (refunds.view) all
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, description: comma = any of, schema: { type: string } }
+        - { name: vendorId, in: query, schema: { type: string } }
+        - { name: orderId, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Refund' } }
+    post:
+      tags: [Refunds]
+      summary: >-
+        Customer asks for a refund on a delivered order (BR-REF-02); one per order, amount up to
+        the food subtotal. The vendor must respond before `deadline`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, reason, amount]
+              properties:
+                orderId: { type: string }
+                reason: { type: string }
+                details: { type: string, maxLength: 500 }
+                amount: { type: integer, description: kobo, at most the order subtotal }
+                photos: { type: array, maxItems: 3, items: { type: string, description: URL or data URI } }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Refund' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: Order not delivered, or a refund already exists }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /refunds/{id}:
+    get:
+      tags: [Refunds]
+      summary: Refund with its full timeline
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Refund' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /refunds/{id}/confirm:
+    post:
+      tags: [Refunds]
+      summary: Customer confirms they received a refund the vendor marked as paid (BR-REF-04)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Refund (status confirmed) }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: Not marked as paid yet }
+
+  /refunds/{id}/dispute:
+    post:
+      tags: [Refunds]
+      summary: Customer disputes a paid or rejected refund; admins are notified (BR-REF-04)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties: { reason: { type: string, maxLength: 500 } }
+      responses:
+        '200': { description: Refund (status disputed) }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: The vendor has not responded yet }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: The signed-in user's in-app notifications
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - { name: unread, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Badge count for the bell
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data: { type: object, properties: { count: { type: integer } } }
+
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark one notification as read
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: The notification }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark every notification as read
+      responses:
+        '200': { description: OK }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1031,6 +1250,72 @@ components:
         delivery: { type: [object, 'null'], description: Detail only — pickup, dropoff, route }
         payment: { type: [object, 'null'], description: Detail only — reference, channel, status }
         refund: { type: [object, 'null'], description: Detail only — id, status, amount }
+        createdAt: { type: string, format: date-time }
+
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        orderId: { type: string }
+        targetType: { type: string, enum: [vendor, rider] }
+        targetId: { type: string }
+        userId: { type: string }
+        userName: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 500 }
+        reply: { type: [string, 'null'], description: Vendor reply }
+        createdAt: { type: string, format: date-time }
+
+    RefundStep:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [requested, accepted, rejected, paid, confirmed, disputed, escalated]
+        at: { type: string, format: date-time }
+        by: { type: string, enum: [system, customer, vendor, admin] }
+        note: { type: [string, 'null'] }
+
+    Refund:
+      type: object
+      properties:
+        id: { type: string }
+        orderId: { type: string }
+        orderCode: { type: string }
+        customerId: { type: string }
+        customerName: { type: string }
+        vendorId: { type: string }
+        vendorName: { type: string }
+        reason: { type: string }
+        details: { type: string }
+        amount: { type: integer, description: kobo }
+        orderSubtotal: { type: integer, description: kobo }
+        photos: { type: array, items: { type: string } }
+        status:
+          type: string
+          enum: [requested, accepted, rejected, paid, confirmed, disputed, escalated]
+        deadline: { type: string, format: date-time, description: Vendor must respond by then }
+        vendorResponse:
+          type: [object, 'null']
+          properties:
+            decision: { type: string, enum: [accepted, rejected] }
+            amount: { type: integer, description: kobo; less than requested = partial }
+            reason: { type: [string, 'null'] }
+            at: { type: string, format: date-time }
+        paymentReference: { type: [string, 'null'] }
+        escalated: { type: boolean }
+        timeline: { type: array, items: { $ref: '#/components/schemas/RefundStep' } }
+        createdAt: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [order, refund, social, review, subscription, payout, system] }
+        title: { type: string }
+        body: { type: string }
+        link: { type: [string, 'null'], description: In-app path to open }
+        readAt: { type: [string, 'null'], format: date-time }
         createdAt: { type: string, format: date-time }
 
   responses:

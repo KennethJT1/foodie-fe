@@ -1,5 +1,11 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { PageHeader } from '@/components/data';
+import { NotificationsList } from '@/features/notifications';
 
 export default function NotificationsPage() {
-  return <ComingSoon title="Notifications" phase={14} />;
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-6 md:px-6">
+      <PageHeader title="Notifications" />
+      <NotificationsList />
+    </div>
+  );
 }
