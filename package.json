@@ -19,7 +19,7 @@
   },
   "lint-staged": {
     "*.{js,jsx}": [
-      "eslint --fix --max-warnings 0",
+      "eslint --fix --max-warnings 0 --no-warn-ignored",
       "prettier --write"
     ],
     "*.{json,md,css,yml,yaml,html}": "prettier --write"
@@ -78,5 +78,10 @@
     "vite": "^6.4.5",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^3.2.7"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
