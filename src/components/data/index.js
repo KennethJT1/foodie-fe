@@ -1,6 +1,8 @@
 export { EmptyState } from '@/components/feedback/EmptyState';
+export { ApprovalActions } from './ApprovalActions';
 export { ChartCard, CHART_COLORS } from './ChartCard';
 export { DataTable } from './DataTable';
+export { DocumentGallery } from './DocumentGallery';
 export { FilterBar } from './FilterBar';
 export { InfiniteList } from './InfiniteList';
 export { PageHeader } from './PageHeader';

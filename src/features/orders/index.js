@@ -1,5 +1,7 @@
 // Public exports of the orders feature. Other features import only from here.
 export { ordersApi } from './api/orders.api';
+export { AdminOrderDetail } from './components/admin/AdminOrderDetail';
+export { AdminOrderList } from './components/admin/AdminOrderList';
 export { CancelOrderDialog } from './components/CancelOrderDialog';
 export { orderColumns } from './components/order-columns';
 export { OrderConfirmation } from './components/OrderConfirmation';

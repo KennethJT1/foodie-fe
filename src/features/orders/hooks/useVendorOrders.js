@@ -58,3 +58,6 @@ export function useNewOrderAlerts() {
     };
   }, [vendorId, accessToken, qc]);
 }
+
+/** Dispatch moves an order to another rider before pickup. */
+export const useReassignOrder = () => useVendorOrderMutation(ordersApi.reassign);

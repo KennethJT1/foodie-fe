@@ -1,5 +1,11 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { PageHeader } from '@/components/data';
+import { AdminOrderList } from '@/features/orders';
 
 export default function OrdersPage() {
-  return <ComingSoon title="Orders" phase={15} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <PageHeader title="Orders" description="Every order on the platform." />
+      <AdminOrderList />
+    </div>
+  );
 }
