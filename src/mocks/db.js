@@ -23,9 +23,11 @@ function load() {
 export let db = load();
 
 let saveTimer = null;
+let isDirty = false;
 
 /** Call after every mutation. Saves are batched. */
 export function persist() {
+  isDirty = true;
   if (!canPersist) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -39,6 +41,7 @@ export function persist() {
 
 /** Restores the original seed (used by /dev/ui and tests). */
 export function resetDb() {
+  isDirty = false;
   db = buildSeed();
   if (canPersist) window.localStorage.removeItem(STORAGE_KEY);
   return db;
@@ -53,3 +56,6 @@ export function publicUser(user) {
   const { password, ...rest } = user;
   return rest;
 }
+
+/** True when something changed since the last reset (tests skip resetting clean data). */
+export const isDbDirty = () => isDirty;

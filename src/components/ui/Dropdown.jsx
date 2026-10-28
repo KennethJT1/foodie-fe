@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { cn } from '@/lib/cn';
@@ -23,10 +23,12 @@ export function Dropdown({
 
   useClickOutside(wrapRef, () => setIsOpen(false), isOpen);
 
-  const open = () => {
-    setIsOpen(true);
-    requestAnimationFrame(() => itemRefs.current[0]?.focus());
-  };
+  const open = () => setIsOpen(true);
+
+  // Focus the first item as soon as the menu is in the DOM
+  useEffect(() => {
+    if (isOpen) itemRefs.current[0]?.focus();
+  }, [isOpen]);
 
   const onMenuKey = (e) => {
     const index = itemRefs.current.indexOf(document.activeElement);
