@@ -1,2 +1,19 @@
 // Public exports of the feed feature. Other features import only from here.
-export {};
+export { feedApi } from './api/feed.api';
+export { CommentThread } from './components/CommentThread';
+export { FoodDetail } from './components/FoodDetail';
+export { FoodPost } from './components/FoodPost';
+export { HomeFeed } from './components/HomeFeed';
+export { LikeButton } from './components/LikeButton';
+export { LikedFoodList } from './components/LikedFoodList';
+export { ReportDialog } from './components/ReportDialog';
+export { ShareButton } from './components/ShareButton';
+export {
+  useAddComment,
+  useComments,
+  useFeed,
+  useLikedItems,
+  useReport,
+  useToggleLike,
+} from './hooks/useFeed';
+export { patchFoodItem } from './lib/patch-food-item';

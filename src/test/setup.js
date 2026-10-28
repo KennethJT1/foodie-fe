@@ -7,6 +7,8 @@ import { isDbDirty, resetDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
 import { createMockSocket } from '@/mocks/socket';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCartStore } from '@/stores/cart-store';
+import { useUiStore } from '@/stores/ui-store';
 
 registerMockSocket(createMockSocket);
 
@@ -14,6 +16,8 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
   useAuthStore.setState({ user: null, accessToken: null, status: 'idle' });
+  useCartStore.getState().clear();
+  useUiStore.setState({ isCartOpen: false, isMobileNavOpen: false });
   server.resetHandlers();
   if (isDbDirty()) resetDb();
   window.localStorage.clear();

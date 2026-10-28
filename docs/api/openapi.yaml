@@ -25,6 +25,7 @@ tags:
   - name: System
   - name: Auth
   - name: Catalogue
+  - name: Social
 
 paths:
   /health:
@@ -338,6 +339,174 @@ paths:
         '200': { description: Vendor with opening hours and isOpen }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /vendors:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: Visible vendors (approved with a live plan)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: city, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Vendor' } }
+
+  /food-items/{id}/likes:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Social]
+      summary: Like a food post (customers)
+      responses:
+        '200': { $ref: '#/components/responses/LikeState' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    delete:
+      tags: [Social]
+      summary: Remove a like
+      responses:
+        '200': { $ref: '#/components/responses/LikeState' }
+
+  /me/likes:
+    get:
+      tags: [Social]
+      summary: Food the signed-in customer liked
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/FoodItem' } }
+
+  /food-items/{id}/comments:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Social]
+      security: []
+      summary: Top-level comments (newest first) with vendor replies, cursor paginated
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+                  meta: { $ref: '#/components/schemas/CursorMeta' }
+    post:
+      tags: [Social]
+      summary: Comment (customers) or reply to a comment (the dish's vendor, parentId required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string, minLength: 1, maxLength: 500, description: Plain text }
+                parentId: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Comment' } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /comments/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Social]
+      summary: Edit your own comment (sets editedAt)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { body: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Updated comment }
+    delete:
+      tags: [Social]
+      summary: Delete your own comment (shown as "Comment removed")
+      responses:
+        '200': { description: Removed }
+
+  /reports:
+    post:
+      tags: [Social]
+      summary: Report a comment or food post to the moderation queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetType, targetId, reason]
+              properties:
+                targetType: { type: string, enum: [comment, food_item] }
+                targetId: { type: string }
+                reason: { type: string }
+      responses:
+        '201': { description: Report created (or the existing open report) }
+
+  /vendors/{id}/follow:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Social]
+      summary: Follow a vendor (customers)
+      responses:
+        '200': { $ref: '#/components/responses/FollowState' }
+    delete:
+      tags: [Social]
+      summary: Unfollow a vendor
+      responses:
+        '200': { $ref: '#/components/responses/FollowState' }
+
+  /me/follows:
+    get:
+      tags: [Social]
+      summary: Vendors the signed-in customer follows
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Vendor' } }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -484,6 +653,62 @@ components:
             isOpen: { type: boolean }
         createdAt: { type: string, format: date-time }
 
+    Vendor:
+      type: object
+      description: Public storefront fields (no bank details or documents)
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        logo: { type: [string, 'null'] }
+        cover: { type: [string, 'null'] }
+        description: { type: string, maxLength: 300 }
+        rating: { type: number }
+        ratingCount: { type: integer }
+        followersCount: { type: integer }
+        isFollowing: { type: boolean }
+        isOpen: { type: boolean, description: Computed from openingHours in Africa/Lagos }
+        isPaused: { type: boolean }
+        prepTimeMins: { type: integer }
+        deliveryRadiusKm: { type: number }
+        distanceM: { type: integer }
+        address:
+          type: object
+          properties:
+            line1: { type: string }
+            area: { type: string }
+            city: { type: string }
+            state: { type: string }
+        openingHours:
+          type: array
+          items:
+            type: object
+            properties:
+              day: { type: integer, minimum: 0, maximum: 6, description: 0 = Sunday }
+              open: { type: string, example: '09:00' }
+              close: { type: string, example: '21:00' }
+              closed: { type: boolean }
+
+    Comment:
+      type: object
+      properties:
+        id: { type: string }
+        foodItemId: { type: string }
+        parentId: { type: [string, 'null'] }
+        body: { type: [string, 'null'], description: null when removed }
+        removed: { type: boolean }
+        isVendorReply: { type: boolean }
+        isMine: { type: boolean }
+        editedAt: { type: [string, 'null'], format: date-time }
+        author:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            avatar: { type: [string, 'null'] }
+        replies: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+        createdAt: { type: string, format: date-time }
+
   responses:
     Session:
       description: Signed in
@@ -513,3 +738,31 @@ components:
     ValidationError:
       description: Field errors
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    LikeState:
+      description: Like state after the change
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Success'
+              - properties:
+                  data:
+                    type: object
+                    properties:
+                      foodItemId: { type: string }
+                      isLiked: { type: boolean }
+                      likesCount: { type: integer }
+    FollowState:
+      description: Follow state after the change
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Success'
+              - properties:
+                  data:
+                    type: object
+                    properties:
+                      vendorId: { type: string }
+                      isFollowing: { type: boolean }
+                      followersCount: { type: integer }
