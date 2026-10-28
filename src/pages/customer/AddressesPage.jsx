@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { PageHeader } from '@/components/data';
+import { ROUTES } from '@/constants/routes';
+import { AddressBook } from '@/features/auth';
 
 export default function AddressesPage() {
-  return <ComingSoon title="Addresses" phase={10} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <PageHeader title="Addresses" backTo={ROUTES.account.root} backLabel="Account" />
+      <AddressBook />
+    </div>
+  );
 }

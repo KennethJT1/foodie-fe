@@ -3,6 +3,7 @@ import { Outlet, ScrollRestoration } from 'react-router-dom';
 
 import { OfflineBanner } from '@/components/feedback';
 import { useSessionBootstrap } from '@/features/auth';
+import { MockPaystackSheet } from '@/features/payments';
 import { env } from '@/lib/env';
 
 const DevRoleSwitcher =
@@ -21,6 +22,7 @@ export function RootLayout() {
       <OfflineBanner />
       <Outlet />
       <ScrollRestoration />
+      <MockPaystackSheet />
       {DevRoleSwitcher && (
         <Suspense fallback={null}>
           <DevRoleSwitcher />

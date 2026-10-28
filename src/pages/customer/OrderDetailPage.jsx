@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { useParams } from 'react-router-dom';
+
+import { OrderDetail } from '@/features/orders';
 
 export default function OrderDetailPage() {
-  return <ComingSoon title="Order" phase={10} />;
+  const { orderId } = useParams();
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <OrderDetail id={orderId} />
+    </div>
+  );
 }

@@ -1,6 +1,11 @@
+export { addressesApi } from './api/addresses.api';
 export { authApi } from './api/auth.api';
+export { AddressBook } from './components/AddressBook';
+export { AddressFormModal } from './components/AddressFormModal';
 export { AuthCard } from './components/AuthCard';
+export { DeleteAccountSection } from './components/DeleteAccountSection';
 export { LoginForm } from './components/LoginForm';
+export { ProfileForm } from './components/ProfileForm';
 export { ForgotPasswordForm, ResetPasswordForm } from './components/PasswordResetForms';
 export { SignupForm } from './components/SignupForm';
 export { VerifyOtpForm } from './components/VerifyOtpForm';
@@ -30,3 +35,10 @@ export {
   useUpdateMe,
   useVerifyOtp,
 } from './hooks/useAuth';
+export {
+  useAddresses,
+  useDeleteAddress,
+  useSaveAddress,
+  useSetDefaultAddress,
+} from './hooks/useAddresses';
+export { addressErrors, formatAddress } from './lib/address';
