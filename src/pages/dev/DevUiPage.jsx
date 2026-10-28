@@ -162,7 +162,7 @@ export function DevUiSections() {
           <Avatar name="Ada Okafor" size="sm" />
           <Avatar name="Bisi Adeyemi" size="md" />
           <Avatar name="Mama Put Kitchen" size="lg" shape="square" />
-          <Avatar src="/logo-mark.svg" name="KJT Foodie" size="xl" />
+          <Avatar src="/logo.webp" name="KJT Foodie" size="xl" />
         </Row>
         <Row>
           <Rating value={4.6} readOnly count={312} />

@@ -48,3 +48,32 @@ export function signInAs(user) {
     status: 'authenticated',
   });
 }
+
+/**
+ * Mounts the real route tree (lazy pages, guards, layouts) at `route`.
+ * Pass `as` with a demo email to start signed in, or 'anonymous'.
+ */
+export async function renderApp(route, { as } = {}) {
+  const [{ routes }, { createMemoryRouter, RouterProvider: Provider }, { db }, { sessionUser }] =
+    await Promise.all([
+      import('@/app/router'),
+      import('react-router-dom'),
+      import('@/mocks/db'),
+      import('@/mocks/utils/auth'),
+    ]);
+  if (as === 'anonymous')
+    useAuthStore.setState({ user: null, accessToken: null, status: 'anonymous' });
+  else if (as) {
+    const user = db.users.find((u) => u.email === as);
+    signInAs(sessionUser(user));
+  }
+  const queryClient = createQueryClient();
+  queryClient.setDefaultOptions({ queries: { retry: false } });
+  const router = createMemoryRouter(routes, { initialEntries: [route] });
+  const result = render(
+    <QueryClientProvider client={queryClient}>
+      <Provider router={router} />
+    </QueryClientProvider>,
+  );
+  return { ...result, router, queryClient };
+}

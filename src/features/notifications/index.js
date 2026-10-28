@@ -1,2 +1,8 @@
-// Public exports of the notifications feature. Other features import only from here.
-export {};
+export { notificationsApi } from './api/notifications.api';
+export { NotificationBell } from './components/NotificationBell';
+export {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+  useUnreadCount,
+} from './hooks/useNotifications';
