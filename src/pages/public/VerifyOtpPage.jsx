@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { VerifyOtpForm } from '@/features/auth';
 
 export default function VerifyOtpPage() {
-  return <ComingSoon title="Verify your phone" phase={8} />;
+  return <VerifyOtpForm />;
 }

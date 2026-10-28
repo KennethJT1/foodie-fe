@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { ResetPasswordForm } from '@/features/auth';
 
 export default function ResetPasswordPage() {
-  return <ComingSoon title="Reset password" phase={8} />;
+  return <ResetPasswordForm />;
 }

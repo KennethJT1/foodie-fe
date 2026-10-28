@@ -1,5 +1,5 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { LoginForm } from '@/features/auth';
 
 export default function LoginPage() {
-  return <ComingSoon title="Log in" phase={8} />;
+  return <LoginForm />;
 }

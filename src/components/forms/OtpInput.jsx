@@ -15,7 +15,7 @@ export function OtpBoxes({
   onComplete,
   error,
   label = 'Verification code',
-  autoFocus,
+  focusOnMount,
 }) {
   const refs = useRef([]);
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
@@ -60,7 +60,7 @@ export function OtpBoxes({
             key={i}
             ref={(el) => (refs.current[i] = el)}
             // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus={autoFocus && i === 0}
+            autoFocus={focusOnMount && i === 0}
             type="text"
             inputMode="numeric"
             autoComplete={i === 0 ? 'one-time-code' : 'off'}
