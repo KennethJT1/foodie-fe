@@ -11,5 +11,7 @@ export const feedApi = {
     api.post(`/food-items/${foodItemId}/comments`, { body, parentId }).then(unwrap),
   editComment: ({ id, body }) => api.patch(`/comments/${id}`, { body }).then(unwrap),
   deleteComment: (id) => api.delete(`/comments/${id}`).then(unwrap),
+  /** Comments on the signed-in vendor's dishes (`answered=false` = waiting for a reply). */
+  vendorComments: (params) => api.get('/vendor/comments', { params }).then(unwrapList),
   report: (body) => api.post('/reports', body).then(unwrap),
 };

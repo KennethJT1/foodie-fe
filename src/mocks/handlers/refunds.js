@@ -33,6 +33,14 @@ function ownRefund(request, id) {
   return { user, refund };
 }
 
+function vendorRefund(request, id) {
+  const { user, error } = requireUser(request, { roles: ['vendor'] });
+  if (error) return { error };
+  const refund = findById('refunds', id);
+  if (!refund || refund.vendorId !== user.vendorId) return { error: fail(404) };
+  return { user, refund };
+}
+
 export const refundHandlers = [
   http.get(api('/refunds'), async ({ request }) => {
     await latency();
@@ -145,6 +153,73 @@ export const refundHandlers = [
       title: 'Refund disputed',
       body: `Order KJT-${refund.orderCode}: ${note.slice(0, 80)}`,
       link: `/admin/refunds/${refund.id}`,
+    });
+    persist();
+    return ok(refund);
+  }),
+  // BR-REF-03: the vendor accepts (full or part) or rejects with a reason before the deadline
+  http.post(api('/refunds/:id/respond'), async ({ request, params }) => {
+    await latency();
+    const { refund, error } = vendorRefund(request, params.id);
+    if (error) return error;
+    if (refund.status !== 'requested')
+      return fail(409, { message: 'You have already answered this refund request.' });
+    const body = await readJson(request);
+    const reason = String(body.reason ?? '')
+      .trim()
+      .slice(0, 500);
+    if (body.decision === 'rejected') {
+      if (!reason) return validationError({ reason: 'Tell the customer why' });
+      refund.status = 'rejected';
+      refund.vendorResponse = {
+        decision: 'rejected',
+        amount: 0,
+        reason,
+        at: new Date().toISOString(),
+      };
+      refund.timeline.push(step('rejected', 'vendor', reason));
+    } else if (body.decision === 'accepted') {
+      const amount = Math.round(Number(body.amount));
+      if (!(amount > 0)) return validationError({ amount: 'Enter the amount you will refund' });
+      if (amount > refund.orderSubtotal)
+        return validationError({ amount: 'You can refund up to the food subtotal' });
+      refund.status = 'accepted';
+      refund.amount = amount;
+      refund.vendorResponse = {
+        decision: 'accepted',
+        amount,
+        reason,
+        at: new Date().toISOString(),
+      };
+      refund.timeline.push(step('accepted', 'vendor', reason || null));
+    } else return validationError({ decision: 'Accept or reject the request' });
+    notify(refund.customerId, {
+      type: 'refund',
+      title: refund.status === 'accepted' ? 'Your refund was accepted' : 'Your refund was declined',
+      body: `Order KJT-${refund.orderCode}: ${reason || 'The vendor will pay you back soon.'}`,
+      link: `/account/refunds/${refund.id}`,
+    });
+    persist();
+    return ok(refund);
+  }),
+
+  http.post(api('/refunds/:id/mark-paid'), async ({ request, params }) => {
+    await latency();
+    const { refund, error } = vendorRefund(request, params.id);
+    if (error) return error;
+    if (refund.status !== 'accepted')
+      return fail(409, { message: 'Accept the refund before you mark it as paid.' });
+    const reference = String((await readJson(request)).reference ?? '').trim();
+    if (reference.length < 4)
+      return validationError({ reference: 'Enter the transfer or Paystack refund reference' });
+    refund.status = 'paid';
+    refund.paymentReference = reference.slice(0, 60);
+    refund.timeline.push(step('paid', 'vendor', `Reference ${refund.paymentReference}`));
+    notify(refund.customerId, {
+      type: 'refund',
+      title: 'Your refund has been paid',
+      body: `Check your account and confirm you got it (reference ${refund.paymentReference}).`,
+      link: `/account/refunds/${refund.id}`,
     });
     persist();
     return ok(refund);

@@ -34,3 +34,5 @@ const useRefundMutation = (mutationFn) => {
 export const useRequestRefund = () => useRefundMutation(refundsApi.create);
 export const useConfirmRefund = () => useRefundMutation(refundsApi.confirm);
 export const useDisputeRefund = () => useRefundMutation(refundsApi.dispute);
+export const useRespondToRefund = () => useRefundMutation(refundsApi.respond);
+export const useMarkRefundPaid = () => useRefundMutation(refundsApi.markPaid);

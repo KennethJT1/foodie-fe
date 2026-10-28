@@ -1,2 +1,6 @@
 // Public exports of the reports feature. Other features import only from here.
-export {};
+export { reportsApi } from './api/reports.api';
+export { SalesReport } from './components/SalesReport';
+export { VendorEngagement } from './components/VendorEngagement';
+export { VendorOverview } from './components/VendorOverview';
+export { downloadCsv, toCsv } from './lib/csv';

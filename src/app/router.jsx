@@ -10,7 +10,6 @@ import {
   RequirePermission,
   RequireRole,
 } from '@/features/auth';
-import { SubscriptionBanner } from '@/features/subscriptions';
 import CustomerLayout from '@/layouts/CustomerLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { adminNav } from '@/layouts/nav/admin';
@@ -21,6 +20,7 @@ import { env } from '@/lib/env';
 
 import { RootLayout } from './RootLayout';
 import { RouteError } from './RouteError';
+import { VendorBanner } from './VendorBanner';
 
 /** Lazy route: each page is its own chunk, so customers never download admin code. */
 const page = (load) => ({ lazy: () => load().then((m) => ({ Component: m.default })) });
@@ -117,7 +117,7 @@ export const routes = [
                 home="/vendor"
                 notificationsTo="/vendor/notifications"
                 profileTo="/vendor/settings"
-                banner={SubscriptionBanner}
+                banner={VendorBanner}
               />
             </RequireRole>
           </RequireAuth>
@@ -155,6 +155,10 @@ export const routes = [
                   { path: 'sales', ...page(() => import('@/pages/vendor/SalesPage')) },
                   { path: 'engagement', ...page(() => import('@/pages/vendor/EngagementPage')) },
                   { path: 'refunds', ...page(() => import('@/pages/vendor/RefundsPage')) },
+                  {
+                    path: 'refunds/:refundId',
+                    ...page(() => import('@/pages/vendor/RefundDetailPage')),
+                  },
                   { path: 'settings', ...page(() => import('@/pages/vendor/SettingsPage')) },
                 ],
               },

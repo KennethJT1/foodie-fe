@@ -39,7 +39,8 @@ so you can check error states.
 
 On mocks, any 10-digit bank account number resolves to the account owner's name, except numbers
 ending in `0000`, which come back as "account not found". On the Paystack test sheet, pick
-**Simulate a failed payment** to see the failed-payment path.
+**Simulate a failed payment** to see the failed-payment path. While a vendor has the dashboard
+open, a demo order arrives about once a minute so the live queue has something to do.
 
 ## Scripts
 

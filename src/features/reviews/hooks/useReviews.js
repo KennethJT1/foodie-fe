@@ -25,3 +25,12 @@ export function useRateOrder() {
     },
   });
 }
+
+/** The vendor answers a review of their store. */
+export function useReplyToReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reviewsApi.reply,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.reviews.all }),
+  });
+}

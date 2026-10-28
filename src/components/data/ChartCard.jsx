@@ -44,10 +44,12 @@ export function ChartCard({
   );
 }
 
-/** Shared colours for charts (tokens from the theme). */
+/** Shared colours for charts: the same values as the Tailwind theme tokens. */
 export const CHART_COLORS = {
-  primary: '#E85D04',
-  secondary: '#1B7F3B',
+  primary: '#FC8A06',
+  secondary: '#028643',
+  ink: '#03081F',
+  inkMuted: '#5B6070',
   accent: '#FFB703',
   info: '#2563EB',
   muted: '#9CA3AF',

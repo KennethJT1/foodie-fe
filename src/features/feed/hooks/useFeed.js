@@ -105,3 +105,23 @@ export function useDeleteComment(foodItemId) {
 }
 
 export const useReport = () => useMutation({ mutationFn: feedApi.report });
+
+/** Comments on the vendor's own dishes, for the engagement inbox. */
+export const useVendorComments = (params) =>
+  useQuery({
+    queryKey: [...queryKeys.comments.all, 'vendor', params],
+    queryFn: () => feedApi.vendorComments(params),
+    placeholderData: keepPreviousData,
+  });
+
+/** Vendor reply to a customer's comment on their dish. */
+export function useReplyToComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: feedApi.addComment,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comments.all });
+      qc.invalidateQueries({ queryKey: queryKeys.vendorMe.engagement });
+    },
+  });
+}

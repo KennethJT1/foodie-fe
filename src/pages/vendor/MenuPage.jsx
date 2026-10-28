@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { MenuManager } from '@/features/catalogue';
 
 export default function MenuPage() {
-  return <ComingSoon title="Menu" phase={13} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <MenuManager />
+    </div>
+  );
 }

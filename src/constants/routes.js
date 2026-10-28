@@ -42,6 +42,7 @@ export const ROUTES = {
     sales: '/vendor/sales',
     engagement: '/vendor/engagement',
     refunds: '/vendor/refunds',
+    refund: (id = ':refundId') => `/vendor/refunds/${id}`,
     plans: '/vendor/plans',
     subscription: '/vendor/subscription',
     settings: '/vendor/settings',

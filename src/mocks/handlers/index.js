@@ -5,6 +5,7 @@ import { categoryHandlers } from './categories';
 import { checkoutHandlers } from './checkout';
 import { devHandlers } from './dev';
 import { healthHandlers } from './health';
+import { menuHandlers } from './menu';
 import { notificationHandlers } from './notifications';
 import { onboardingHandlers } from './onboarding';
 import { orderHandlers } from './orders';
@@ -12,6 +13,8 @@ import { refundHandlers } from './refunds';
 import { reviewHandlers } from './reviews';
 import { socialHandlers } from './social';
 import { subscriptionHandlers } from './subscriptions';
+import { vendorOrderHandlers } from './vendor-orders';
+import { vendorStoreHandlers } from './vendor-store';
 
 /** One file per feature; each phase adds its handlers here. */
 export const handlers = [
@@ -28,5 +31,8 @@ export const handlers = [
   ...notificationHandlers,
   ...onboardingHandlers,
   ...subscriptionHandlers,
+  ...vendorOrderHandlers,
+  ...menuHandlers,
+  ...vendorStoreHandlers,
   ...devHandlers,
 ];
