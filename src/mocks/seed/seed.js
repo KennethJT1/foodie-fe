@@ -859,7 +859,7 @@ export function buildSeed(seed = 2026) {
         return {
           foodItemId: f.id,
           name: f.name,
-          photo: f.photos[0],
+          // photo is joined from the food item when served (keeps localStorage small)
           unitPrice: f.price,
           quantity,
           options,
