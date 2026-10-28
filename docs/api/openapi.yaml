@@ -1,0 +1,8 @@
+# Placeholder. Endpoints for auth and catalogue are drafted with the backend lead in phase 4.
+openapi: 3.1.0
+info:
+  title: KJT Foodie API
+  version: 0.0.1
+servers:
+  - url: /api/v1
+paths: {}
