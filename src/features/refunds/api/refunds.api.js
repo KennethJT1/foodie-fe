@@ -7,5 +7,7 @@ export const refundsApi = {
   confirm: (id) => api.post(`/refunds/${id}/confirm`).then(unwrap),
   respond: ({ id, ...body }) => api.post(`/refunds/${id}/respond`, body).then(unwrap),
   markPaid: ({ id, reference }) => api.post(`/refunds/${id}/mark-paid`, { reference }).then(unwrap),
+  comment: ({ id, body }) => api.post(`/refunds/${id}/comments`, { body }).then(unwrap),
+  escalate: ({ id, reason }) => api.post(`/refunds/${id}/escalate`, { reason }).then(unwrap),
   dispute: ({ id, reason }) => api.post(`/refunds/${id}/dispute`, { reason }).then(unwrap),
 };

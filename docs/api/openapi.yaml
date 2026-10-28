@@ -1884,6 +1884,414 @@ paths:
             deliveries: [{ orderId, code, status, city, riderId, vendor { name, lat, lng },
             dropoff { area, lat, lng }, etaMins }], at }`
 
+  /admin/payments:
+    get:
+      tags: [Admin]
+      summary: Every transaction with its Paystack split, settlement and reconciliation flag (BR-PAY-08)
+      x-permission: payments.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: type, in: query, schema: { type: string, enum: [order, subscription] } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: settlementStatus, in: query, schema: { type: string, enum: [settling, settled] } }
+        - { name: flagged, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: 'Page of payments; meta.summary = { amount, vendorShare, platformShare, fee, flagged }' }
+
+  /admin/payments/{id}/reconcile:
+    post:
+      tags: [Admin]
+      summary: Clear a reconciliation flag with a note on how it was checked
+      x-permission: payments.view
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties: { note: { type: string } }
+      responses:
+        '200': { description: '{ id, flag: null, reconciled: true }' }
+
+  /admin/plans:
+    get:
+      tags: [Admin]
+      summary: All plans including retired, with how many vendors are on each
+      x-permission: subscriptions.view
+      responses:
+        '200': { description: 'Plans; meta = { trialDays, yearlyDiscountPct }' }
+    post:
+      tags: [Admin]
+      summary: Create a plan (BR-SUB-07)
+      x-permission: subscriptions.manage
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PlanInput' } } }
+      responses:
+        '201': { description: Plan }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/plans/{id}:
+    patch:
+      tags: [Admin]
+      summary: Edit a plan's price, limits, placement, analytics, popular flag or retire it
+      x-permission: subscriptions.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PlanInput' } } }
+      responses:
+        '200': { description: Plan }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/subscriptions:
+    get:
+      tags: [Admin]
+      summary: Vendor subscriptions (trial, active, grace, expired), soonest to end first
+      x-permission: subscriptions.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string } }
+        - { name: planId, in: query, schema: { type: string } }
+        - { name: interval, in: query, schema: { type: string, enum: [monthly, yearly] } }
+      responses:
+        '200': { description: 'Page of { id, vendorId, vendorName, planName, interval, status, cancelAtPeriodEnd, currentPeriodEnd, trialEndsAt, graceEndsAt }' }
+
+  /admin/subscriptions/{id}/extend:
+    post:
+      tags: [Admin]
+      summary: Complimentary extension; an expired or grace plan becomes active (BR-SUB-07)
+      x-permission: subscriptions.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [days, reason]
+              properties: { days: { type: integer, minimum: 1, maximum: 365 }, reason: { type: string } }
+      responses:
+        '200': { description: '{ id, status, currentPeriodEnd }' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/payouts:
+    get:
+      tags: [Admin]
+      summary: Rider monthly payout statements
+      x-permission: payouts.manage
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, enum: [draft, approved, paid] } }
+        - { name: month, in: query, schema: { type: string, example: '2026-09' } }
+      responses:
+        '200': { description: Page of payout statements }
+
+  /admin/payouts/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a draft statement (BR-PAY-06)
+      x-permission: payouts.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Statement (approved) }
+        '409': { description: Not a draft }
+
+  /admin/payouts/{id}/mark-paid:
+    post:
+      tags: [Admin]
+      summary: Record the bank transfer reference; the rider is notified
+      x-permission: payouts.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference]
+              properties: { reference: { type: string } }
+      responses:
+        '200': { description: Statement (paid) }
+        '409': { description: Not approved yet }
+
+  /refunds/{id}/comments:
+    post:
+      tags: [Refunds]
+      summary: Internal team comment on a refund (BR-REF-05)
+      x-permission: refunds.view
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties: { body: { type: string, maxLength: 500 } }
+      responses:
+        '200': { description: Refund with comments }
+
+  /refunds/{id}/escalate:
+    post:
+      tags: [Refunds]
+      summary: Escalate a refund; vendor and customer are told the team stepped in (BR-REF-05)
+      x-permission: refunds.escalate
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties: { reason: { type: string } }
+      responses:
+        '200': { description: Refund (escalated) }
+        '409': { description: Already closed or escalated }
+
+  /admin/reports:
+    get:
+      tags: [Admin]
+      summary: Moderation queue of reported comments and dishes, with a preview of each
+      x-permission: moderation.manage
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, enum: [open, resolved, dismissed] } }
+        - { name: targetType, in: query, schema: { type: string, enum: [comment, food_item] } }
+      responses:
+        '200': { description: 'Page of reports { id, targetType, targetId, reason, status, reporterName, target, action?, resolvedBy? }' }
+
+  /admin/reports/{id}/resolve:
+    post:
+      tags: [Admin]
+      summary: Hide, remove or dismiss; every open report on the same thing is settled
+      x-permission: moderation.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties: { action: { type: string, enum: [hide, remove, dismiss] } }
+      responses:
+        '200': { description: Report }
+        '409': { description: Already handled }
+
+  /admin/tickets:
+    get:
+      tags: [Admin]
+      summary: Support inbox
+      x-permission: support.manage
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, example: 'open,pending' } }
+        - { name: assignee, in: query, schema: { type: string, description: 'me, none or an admin id' } }
+        - { name: priority, in: query, schema: { type: string, enum: [low, normal, high] } }
+      responses:
+        '200': { description: Page of tickets (with lastMessage) }
+
+  /admin/tickets/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Admin]
+      summary: Ticket with every message, including internal notes
+      x-permission: support.manage
+      responses:
+        '200': { description: Ticket }
+    patch:
+      tags: [Admin]
+      summary: Change status, priority or assignee
+      x-permission: support.manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [open, pending, resolved, closed] }
+                priority: { type: string, enum: [low, normal, high] }
+                assigneeId: { type: [string, 'null'] }
+      responses:
+        '200': { description: Ticket }
+
+  /admin/tickets/{id}/messages:
+    post:
+      tags: [Admin]
+      summary: Reply (the user is notified; open → pending) or add an internal note
+      x-permission: support.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties: { body: { type: string, maxLength: 2000 }, internal: { type: boolean } }
+      responses:
+        '200': { description: Ticket }
+
+  /admin/agents:
+    get:
+      tags: [Admin]
+      summary: Admins who can answer tickets (for assignment)
+      x-permission: support.manage
+      responses:
+        '200': { description: 'Array of { id, name }' }
+
+  /admin/settings:
+    get:
+      tags: [Admin]
+      summary: Platform settings
+      x-permission: settings.manage
+      responses:
+        '200': { description: Settings }
+    patch:
+      tags: [Admin]
+      summary: Change fees, payout %, timeouts, trial/grace, refunds, service areas or templates (logged)
+      x-permission: settings.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deliveryBaseFee: { type: integer, description: kobo }
+                deliveryPerKm: { type: integer, description: kobo }
+                deliveryMaxFee: { type: integer, description: kobo }
+                riderPayoutPct: { type: number }
+                vendorAcceptTimeoutSec: { type: integer }
+                riderOfferTimeoutSec: { type: integer }
+                trialDays: { type: integer }
+                graceDays: { type: integer }
+                yearlyDiscountPct: { type: number }
+                refundDeadlineHours: { type: integer }
+                refundMissedAction: { type: string, enum: [escalate, warn, suspend] }
+                serviceAreas: { type: array, items: { type: string } }
+                notificationTemplates:
+                  type: array
+                  items: { type: object, properties: { key: { type: string }, channel: { type: string }, subject: { type: string }, body: { type: string } } }
+      responses:
+        '200': { description: Settings }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Admin accounts
+      x-permission: admin_users.manage
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: adminRole, in: query, schema: { type: string } }
+      responses:
+        '200': { description: 'Page of { id, name, email, adminRole, status, createdAt }' }
+    post:
+      tags: [Admin]
+      summary: Add an admin (they get an email to set a password)
+      x-permission: admin_users.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, adminRole]
+              properties: { firstName: { type: string }, lastName: { type: string }, email: { type: string }, adminRole: { type: string, enum: [super_admin, support, finance, dispatch, onboarding] } }
+      responses:
+        '201': { description: Admin }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/users/{id}:
+    patch:
+      tags: [Admin]
+      summary: Change another admin's role or suspend / restore them
+      x-permission: admin_users.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { adminRole: { type: string }, status: { type: string, enum: [active, suspended] } } }
+      responses:
+        '200': { description: Admin }
+        '409': { description: You can't change yourself }
+
+  /admin/roles:
+    get:
+      tags: [Admin]
+      summary: Admin sub-roles with their permissions, and every permission there is
+      x-permission: admin_users.manage
+      responses:
+        '200': { description: '{ roles: [{ id, permissions }], permissions: string[] }' }
+
+  /admin/roles/{id}:
+    patch:
+      tags: [Admin]
+      summary: Set a role's permissions (super_admin is locked; dashboard.view is required)
+      x-permission: admin_users.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [permissions]
+              properties: { permissions: { type: array, items: { type: string } } }
+      responses:
+        '200': { description: Role }
+        '409': { description: Super admin can't be changed }
+
+  /admin/roles/{id}/reset:
+    post:
+      tags: [Admin]
+      summary: Put a role back to its default permissions
+      x-permission: admin_users.manage
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Role }
+
+  /admin/audit-log:
+    get:
+      tags: [Admin]
+      summary: Admin actions and money events
+      x-permission: audit_log.view
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: actorRole, in: query, schema: { type: string } }
+        - { name: targetType, in: query, schema: { type: string } }
+        - { name: action, in: query, schema: { type: string, description: prefix match, comma for several } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: 'Page of { id, actorName, actorRole, action, targetType, targetId, summary, ip, createdAt }' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2410,6 +2818,22 @@ components:
         pickup: { type: object, properties: { name: { type: string }, area: { type: string }, lat: { type: number }, lng: { type: number } } }
         dropoff: { type: object, properties: { area: { type: string }, city: { type: string }, lat: { type: number }, lng: { type: number } } }
         expiresAt: { type: string, format: date-time, description: 30 seconds after it was sent }
+
+    PlanInput:
+      type: object
+      properties:
+        name: { type: string }
+        monthlyPrice: { type: integer, description: kobo }
+        limits:
+          type: object
+          properties:
+            menuItems: { type: [integer, 'null'] }
+            photosPerItem: { type: integer }
+            staff: { type: integer }
+        featured: { type: string, enum: [none, occasional, priority] }
+        analytics: { type: string, enum: [basic, full, export] }
+        isPopular: { type: boolean }
+        isRetired: { type: boolean }
 
   responses:
     Session:

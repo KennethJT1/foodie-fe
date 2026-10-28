@@ -1,5 +1,14 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { PageHeader } from '@/components/data';
+import { AdminPayouts } from '@/features/riders';
 
 export default function PayoutsPage() {
-  return <ComingSoon title="Rider payouts" phase={16} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <PageHeader
+        title="Rider payouts"
+        description="Monthly statements: approve, pay by bank transfer, then mark paid."
+      />
+      <AdminPayouts />
+    </div>
+  );
 }

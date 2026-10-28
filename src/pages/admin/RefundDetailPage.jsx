@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { useParams } from 'react-router-dom';
+
+import { AdminRefundDetail } from '@/features/refunds';
 
 export default function RefundDetailPage() {
-  return <ComingSoon title="Refund" phase={16} />;
+  const { refundId } = useParams();
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <AdminRefundDetail id={refundId} />
+    </div>
+  );
 }
