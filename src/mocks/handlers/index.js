@@ -7,6 +7,8 @@ import { devHandlers } from './dev';
 import { healthHandlers } from './health';
 import { notificationHandlers } from './notifications';
 import { orderHandlers } from './orders';
+import { refundHandlers } from './refunds';
+import { reviewHandlers } from './reviews';
 import { socialHandlers } from './social';
 
 /** One file per feature; each phase adds its handlers here. */
@@ -19,6 +21,8 @@ export const handlers = [
   ...addressHandlers,
   ...checkoutHandlers,
   ...orderHandlers,
+  ...reviewHandlers,
+  ...refundHandlers,
   ...notificationHandlers,
   ...devHandlers,
 ];
