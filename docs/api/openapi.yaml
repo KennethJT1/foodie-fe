@@ -26,6 +26,9 @@ tags:
   - name: Auth
   - name: Catalogue
   - name: Social
+  - name: Account
+  - name: Orders
+  - name: Payments
 
 paths:
   /health:
@@ -507,6 +510,205 @@ paths:
                   - properties:
                       data: { type: array, items: { $ref: '#/components/schemas/Vendor' } }
 
+  /addresses:
+    get:
+      tags: [Account]
+      summary: Saved delivery addresses (default first)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Address' } }
+    post:
+      tags: [Account]
+      summary: Save an address (the first one becomes the default)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AddressInput' } } }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /addresses/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Account]
+      summary: Update an address
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/AddressInput' } } }
+      responses:
+        '200': { description: Updated }
+    delete:
+      tags: [Account]
+      summary: Delete an address (another becomes default when needed)
+      responses:
+        '200': { description: Deleted }
+
+  /addresses/{id}/default:
+    post:
+      tags: [Account]
+      summary: Make an address the default
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+
+  /checkout/quote:
+    post:
+      tags: [Orders]
+      summary: Price a cart on the server (subtotal, delivery fee, processing fee, total, ETA)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CheckoutInput' } } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Quote' } }
+        '422':
+          description: >-
+            Cannot be ordered: error.code is VENDOR_CLOSED (schedule for later), VENDOR_PAUSED,
+            OUT_OF_RANGE, ITEM_UNAVAILABLE or EMPTY_CART
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /payments/initialize:
+    post:
+      tags: [Payments]
+      summary: Start a Paystack transaction for the cart. No order exists yet (FR-ORD-03).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CheckoutInput'
+                - properties: { deliveryNote: { type: string, maxLength: 200 } }
+      responses:
+        '200':
+          description: Transaction ready for the Paystack popup
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          reference: { type: string }
+                          accessCode: { type: string }
+                          amount: { type: integer, description: kobo }
+                          email: { type: string }
+
+  /payments/verify:
+    post:
+      tags: [Payments]
+      summary: Confirm the payment with the gateway and create the order (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [reference], properties: { reference: { type: string } } }
+      responses:
+        '200':
+          description: Paid; the order is returned
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, enum: [success] }
+                          reference: { type: string }
+                          order: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /me/payments:
+    get:
+      tags: [Payments]
+      summary: The customer's order payments (refunded when the order was cancelled or rejected)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, enum: [success, refunded, failed] } }
+      responses:
+        '200': { description: Page of payments }
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: >-
+        Orders scoped by role: customers their own, vendors their store's, riders their trips,
+        admins (orders.view) all
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, description: comma = any of, schema: { type: string } }
+        - { name: active, in: query, schema: { type: boolean } }
+        - { name: vendorId, in: query, schema: { type: string } }
+        - { name: customerId, in: query, schema: { type: string } }
+        - { name: riderId, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/Order' } }
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Order with vendor, rider, delivery route, payment and refund
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/Order' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      summary: Customer cancels before the vendor accepts (FR-ORD-05); full refund
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { reason: { type: string } } }
+      responses:
+        '200': { description: Cancelled order }
+        '409': { description: Already accepted (error.code CANNOT_CANCEL) }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -707,6 +909,128 @@ components:
             name: { type: string }
             avatar: { type: [string, 'null'] }
         replies: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+        createdAt: { type: string, format: date-time }
+
+    Address:
+      type: object
+      properties:
+        id: { type: string }
+        label: { type: string, example: Home }
+        line1: { type: string }
+        area: { type: string }
+        city: { type: string }
+        state: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        directions: { type: string }
+        isDefault: { type: boolean }
+
+    AddressInput:
+      type: object
+      required: [line1, area, city, lat, lng]
+      properties:
+        label: { type: string }
+        line1: { type: string }
+        area: { type: string }
+        city: { type: string }
+        state: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        directions: { type: string }
+        isDefault: { type: boolean }
+
+    CheckoutInput:
+      type: object
+      required: [vendorId, items]
+      properties:
+        vendorId: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              foodItemId: { type: string }
+              quantity: { type: integer, minimum: 1 }
+              optionIds: { type: array, items: { type: string } }
+        addressId: { type: string, description: A saved address, or send `address` }
+        address: { $ref: '#/components/schemas/AddressInput' }
+        scheduledFor:
+          type: [string, 'null']
+          format: date-time
+          description: FR-ORD-07; required when the vendor is closed now
+
+    OrderLine:
+      type: object
+      properties:
+        foodItemId: { type: string }
+        name: { type: string }
+        photo: { type: [string, 'null'] }
+        unitPrice: { type: integer, description: kobo }
+        quantity: { type: integer }
+        lineTotal: { type: integer, description: kobo }
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              groupId: { type: string }
+              groupName: { type: string }
+              optionId: { type: string }
+              name: { type: string }
+              price: { type: integer }
+
+    Quote:
+      type: object
+      properties:
+        lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+        subtotal: { type: integer }
+        deliveryFee: { type: integer }
+        processingFee: { type: integer }
+        total: { type: integer }
+        distanceM: { type: integer }
+        etaMins: { type: array, items: { type: integer }, example: [25, 35] }
+        isOpen: { type: boolean }
+        scheduledFor: { type: [string, 'null'], format: date-time }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        code: { type: string, example: 4F7Q2A }
+        status:
+          type: string
+          enum: [paid, accepted, rejected, preparing, ready_for_pickup, rider_assigned, picked_up, delivered, cancelled]
+        customerId: { type: string }
+        customerName: { type: string }
+        vendorId: { type: string }
+        vendorName: { type: string }
+        riderId: { type: [string, 'null'] }
+        items: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+        subtotal: { type: integer }
+        deliveryFee: { type: integer }
+        processingFee: { type: integer }
+        total: { type: integer }
+        address: { $ref: '#/components/schemas/Address' }
+        deliveryNote: { type: string }
+        scheduledFor: { type: [string, 'null'], format: date-time }
+        deliveryCode: { type: string, description: Only for the customer and admins }
+        etaMins: { type: array, items: { type: integer } }
+        isActive: { type: boolean }
+        statusHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              status: { type: string }
+              at: { type: string, format: date-time }
+              by: { type: string, enum: [system, customer, vendor, rider, admin] }
+        ratedVendor: { type: boolean }
+        ratedRider: { type: boolean }
+        vendor: { type: object, description: Detail only — name, slug, logo, phone, lat, lng }
+        rider: { type: [object, 'null'], description: Detail only — name, phone, vehicle, lat, lng }
+        delivery: { type: [object, 'null'], description: Detail only — pickup, dropoff, route }
+        payment: { type: [object, 'null'], description: Detail only — reference, channel, status }
+        refund: { type: [object, 'null'], description: Detail only — id, status, amount }
         createdAt: { type: string, format: date-time }
 
   responses:

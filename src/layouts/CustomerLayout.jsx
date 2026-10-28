@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
+import { CartDrawer } from '@/features/cart';
 import { NotificationBell } from '@/features/notifications';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
@@ -95,6 +96,7 @@ export default function CustomerLayout() {
         <Outlet />
       </main>
       <BottomTabs tabs={customerTabs} />
+      <CartDrawer />
     </div>
   );
 }
