@@ -5,7 +5,7 @@ import { ACTIVE_ORDER_STATUSES, ORDER_STATUS } from '@/constants/order-status';
 import { db, findById, persist } from '../db';
 import { notify, requireUser } from '../utils/auth';
 import { applyListQuery, listResponse } from '../utils/list';
-import { canSeeOrder, ordersFor, serializeOrder } from '../utils/orders';
+import { canSeeOrder, expireOverdueOrders, ordersFor, serializeOrder } from '../utils/orders';
 import { api } from '../utils/path';
 import { chaos, fail, latency, ok, readJson } from '../utils/respond';
 
@@ -17,6 +17,7 @@ export const orderHandlers = [
     if (failure) return failure;
     const { user, error } = requireUser(request);
     if (error) return error;
+    if (user.role === 'vendor' && expireOverdueOrders(user.vendorId)) persist();
     const params = new URL(request.url).searchParams;
     const photos = new Map(db.foodItems.map((f) => [f.id, f.photos?.[0] ?? null]));
     const page = applyListQuery(ordersFor(user), params, {
@@ -46,6 +47,7 @@ export const orderHandlers = [
     if (failure) return failure;
     const { user, error } = requireUser(request);
     if (error) return error;
+    if (user.role === 'vendor' && expireOverdueOrders(user.vendorId)) persist();
     const order = findById('orders', params.id);
     if (!order || !canSeeOrder(user, order))
       return fail(404, { message: "We couldn't find that order." });

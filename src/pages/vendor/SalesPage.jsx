@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { SalesReport } from '@/features/reports';
 
 export default function SalesPage() {
-  return <ComingSoon title="Sales and payouts" phase={13} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <SalesReport />
+    </div>
+  );
 }

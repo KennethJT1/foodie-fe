@@ -1,5 +1,12 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { useParams } from 'react-router-dom';
+
+import { MenuItemForm } from '@/features/catalogue';
 
 export default function MenuItemFormPage() {
-  return <ComingSoon title="Menu item" phase={13} />;
+  const { itemId } = useParams();
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <MenuItemForm id={itemId} />
+    </div>
+  );
 }

@@ -5,7 +5,7 @@ import { newId } from '../seed/seed';
 import { notify, requireUser } from '../utils/auth';
 import { applyListQuery, listResponse } from '../utils/list';
 import { api } from '../utils/path';
-import { created, fail, latency, readJson, validationError } from '../utils/respond';
+import { created, fail, latency, ok, readJson, validationError } from '../utils/respond';
 
 const TARGETS = { vendor: 'vendors', rider: 'riders' };
 
@@ -72,5 +72,27 @@ export const reviewHandlers = [
     }
     persist();
     return created(review);
+  }),
+  // The vendor answers a review of their store once
+  http.post(api('/reviews/:id/reply'), async ({ request, params }) => {
+    await latency();
+    const { user, error } = requireUser(request, { roles: ['vendor'] });
+    if (error) return error;
+    const review = findById('reviews', params.id);
+    if (!review || review.targetType !== 'vendor' || review.targetId !== user.vendorId)
+      return fail(404);
+    if (review.reply) return fail(409, { message: 'You have already replied to this review.' });
+    const body = String((await readJson(request)).body ?? '').trim();
+    if (!body) return validationError({ body: 'Write a reply first' });
+    if (body.length > 500) return validationError({ body: 'Keep it under 500 characters' });
+    review.reply = { body, createdAt: new Date().toISOString() };
+    notify(review.userId, {
+      type: 'review',
+      title: 'The vendor replied to your review',
+      body: body.slice(0, 80),
+      link: `/account/orders/${review.orderId}`,
+    });
+    persist();
+    return ok(review);
   }),
 ];

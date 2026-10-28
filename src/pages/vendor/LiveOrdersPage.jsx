@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { VendorOrderQueue } from '@/features/orders';
 
 export default function LiveOrdersPage() {
-  return <ComingSoon title="Live orders" phase={13} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <VendorOrderQueue />
+    </div>
+  );
 }

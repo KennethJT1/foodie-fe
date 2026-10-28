@@ -90,6 +90,8 @@ export function serializeFoodItem(f, ctx) {
     prepTimeMins: f.prepTimeMins,
     isAvailable: f.isAvailable,
     availableDays: f.availableDays,
+    availableFrom: f.availableFrom ?? null,
+    availableTo: f.availableTo ?? null,
     optionGroups: f.optionGroups,
     likesCount: f.likesCount,
     commentsCount: f.commentsCount,

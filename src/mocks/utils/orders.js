@@ -6,6 +6,7 @@ import { db, findById } from '../db';
 import { notify, permissionsFor } from './auth';
 import { isVendorOpen, isVendorVisible } from './catalogue';
 import { distanceMetres } from './geo';
+import { serverEmit } from '../socket';
 import { deliveryFeeFor, processingFeeFor } from './settings-defaults';
 import { newId, orderCode } from '../seed/seed';
 
@@ -30,6 +31,7 @@ export function serializeOrder(order, viewer, { photos = photoMap(), detail = fa
     items: order.items.map((l) => ({ ...l, photo: photos.get(l.foodItemId) ?? null })),
     itemCount: order.items.reduce((n, l) => n + l.quantity, 0),
     isActive: ACTIVE_ORDER_STATUSES.includes(order.status),
+    riderName: order.riderId ? (findById('riders', order.riderId)?.name ?? null) : null,
   };
   // The rider asks the customer for the code, so only the customer (and admins) see it
   if (!['customer', 'admin'].includes(viewer?.role)) delete out.deliveryCode;
@@ -276,6 +278,13 @@ export function createOrderFromPayment(user, pending) {
     body: `Order KJT-${order.code} is with ${vendor.name}.`,
     link: `/account/orders/${order.id}`,
   });
+  serverEmit('vendor:order:new', {
+    vendorId: vendor.id,
+    orderId: order.id,
+    code: order.code,
+    total: order.subtotal,
+    acceptDeadline: order.acceptDeadline,
+  });
   notify(vendor.ownerId, {
     type: 'order',
     title: 'New order',
@@ -283,4 +292,110 @@ export function createOrderFromPayment(user, pending) {
     link: `/vendor/orders/${order.id}`,
   });
   return order;
+}
+
+/**
+ * BR-PAY-04: an order the vendor did not accept in time is rejected and refunded in full.
+ * Checked lazily whenever the vendor's orders are read.
+ */
+export function expireOverdueOrders(vendorId, now = Date.now()) {
+  let changed = false;
+  for (const order of db.orders) {
+    if (order.vendorId !== vendorId || order.status !== ORDER_STATUS.PAID) continue;
+    if (new Date(order.acceptDeadline).getTime() > now) continue;
+    rejectOrder(order, 'Not accepted in time', 'system');
+    changed = true;
+  }
+  return changed;
+}
+
+/** Rejects an order and refunds the customer: food from the vendor, delivery fee from us. */
+export function rejectOrder(order, reason, by = 'vendor') {
+  const at = new Date().toISOString();
+  order.status = ORDER_STATUS.REJECTED;
+  order.cancelReason = reason;
+  order.statusHistory.push({ status: ORDER_STATUS.REJECTED, at, by, note: reason });
+  order.updatedAt = at;
+  const payment = db.payments.find((p) => p.orderId === order.id);
+  if (payment) {
+    payment.status = 'refunded';
+    payment.refundedAt = at;
+  }
+  notify(order.customerId, {
+    type: 'order',
+    title: "The vendor couldn't take your order",
+    body: `Order KJT-${order.code}: ${reason}. You'll get a full refund.`,
+    link: `/account/orders/${order.id}`,
+  });
+  serverEmit('order:status', {
+    orderId: order.id,
+    status: order.status,
+    statusHistory: order.statusHistory,
+    updatedAt: at,
+  });
+}
+
+/** Demo traffic: a random customer nearby orders one to three dishes from the vendor. */
+export function createDemoOrder(vendor) {
+  const items = db.foodItems.filter(
+    (f) => f.vendorId === vendor.id && f.isAvailable && !f.isHidden,
+  );
+  const customers = db.users.filter((u) => u.role === 'customer' && u.status === 'active');
+  if (!items.length || !customers.length || vendor.lat == null) return null;
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  const customer = pick(customers);
+  const chosen = [
+    ...new Set(Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => pick(items))),
+  ];
+  const lines = chosen.map((item) => {
+    const options = item.optionGroups
+      .filter((g) => g.required && g.options.length)
+      .map((g) => ({
+        groupId: g.id,
+        groupName: g.name,
+        optionId: g.options[0].id,
+        name: g.options[0].name,
+        price: g.options[0].price,
+      }));
+    const quantity = 1 + Math.floor(Math.random() * 2);
+    const unit = item.price + options.reduce((s, o) => s + o.price, 0);
+    return {
+      foodItemId: item.id,
+      name: item.name,
+      unitPrice: item.price,
+      quantity,
+      options,
+      lineTotal: unit * quantity,
+    };
+  });
+  const address = {
+    label: 'Home',
+    line1: `${10 + Math.floor(Math.random() * 80)} Demo Close`,
+    area: vendor.address?.area ?? '',
+    city: vendor.city,
+    state: vendor.address?.state ?? '',
+    lat: vendor.lat + (Math.random() - 0.5) * 0.03,
+    lng: vendor.lng + (Math.random() - 0.5) * 0.03,
+  };
+  const distanceM = Math.max(300, distanceMetres(vendor, address));
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const deliveryFee = deliveryFeeFor(distanceM, db.settings);
+  const processingFee = processingFeeFor(subtotal + deliveryFee, db.settings);
+  const quote = {
+    vendor: { id: vendor.id },
+    lines,
+    subtotal,
+    deliveryFee,
+    processingFee,
+    total: subtotal + deliveryFee + processingFee,
+    distanceM,
+    etaMins: [
+      Math.round(vendor.prepTimeMins + distanceM / 400),
+      Math.round(vendor.prepTimeMins + distanceM / 300 + 10),
+    ],
+    scheduledFor: null,
+    address,
+  };
+  const reference = `KJT_DEMO${Date.now().toString(36).toUpperCase()}`;
+  return createOrderFromPayment(customer, { quote, deliveryNote: '', reference });
 }

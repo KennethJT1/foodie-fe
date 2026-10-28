@@ -5,16 +5,26 @@ import { newId } from './seed/seed';
 import { onClientEmit, serverEmit } from './socket';
 import { notify } from './utils/auth';
 import { distanceMetres, interpolateRoute } from './utils/geo';
+import { createDemoOrder } from './utils/orders';
 
 /**
  * Fake real-time backend. When the app subscribes to an active order (`order:subscribe`), a
  * rider is moved along a route and the status advances every few seconds until delivered,
  * emitting `order:status` and `rider:location` like the real Socket.IO server.
+ * While a vendor's dashboard is open (`vendor:subscribe`) the vendor accepts and prepares their
+ * own orders, and new demo orders arrive every `newOrderMs` (`vendor:order:new`).
  * Off by default under tests; tests turn it on with a tiny step.
  */
 const isTest = import.meta.env.MODE === 'test';
-const options = { enabled: !isTest, stepMs: 5000, approachSteps: 6, deliverySteps: 10 };
+const options = {
+  enabled: !isTest,
+  stepMs: 5000,
+  approachSteps: 6,
+  deliverySteps: 10,
+  newOrderMs: isTest ? 0 : 60000,
+};
 const running = new Map(); // orderId -> { timer, subscribers, route, index }
+const vendorWatchers = new Map(); // vendorId -> { count, timer }
 let registered = false;
 
 export function configureOrderSimulation(next) {
@@ -24,6 +34,8 @@ export function configureOrderSimulation(next) {
 export function stopOrderSimulations() {
   running.forEach((s) => clearInterval(s.timer));
   running.clear();
+  vendorWatchers.forEach((w) => clearInterval(w.timer));
+  vendorWatchers.clear();
 }
 
 /** Listens for subscriptions from the app. Safe to call more than once. */
@@ -32,7 +44,40 @@ export function registerRealtime() {
   registered = true;
   onClientEmit('order:subscribe', (payload) => subscribe(payload?.orderId));
   onClientEmit('order:unsubscribe', (payload) => unsubscribe(payload?.orderId));
+  onClientEmit('vendor:subscribe', (payload) => watchVendor(payload?.vendorId));
+  onClientEmit('vendor:unsubscribe', (payload) => unwatchVendor(payload?.vendorId));
 }
+
+function watchVendor(vendorId) {
+  if (!vendorId) return;
+  const w = vendorWatchers.get(vendorId) ?? { count: 0, timer: null };
+  w.count += 1;
+  if (!w.timer && options.enabled && options.newOrderMs > 0)
+    w.timer = setInterval(() => simulateIncomingOrder(vendorId), options.newOrderMs);
+  vendorWatchers.set(vendorId, w);
+}
+
+function unwatchVendor(vendorId) {
+  const w = vendorWatchers.get(vendorId);
+  if (!w) return;
+  w.count -= 1;
+  if (w.count <= 0) {
+    clearInterval(w.timer);
+    vendorWatchers.delete(vendorId);
+  }
+}
+
+/** A customer somewhere places an order with this vendor (demo traffic for the live queue). */
+export function simulateIncomingOrder(vendorId) {
+  const vendor = findById('vendors', vendorId);
+  if (!vendor || vendor.isPaused) return null;
+  const order = createDemoOrder(vendor);
+  if (order) persist();
+  return order;
+}
+
+/** Steps the vendor takes themselves while their dashboard is open. */
+const VENDOR_STEPS = [ORDER_STATUS.PAID, ORDER_STATUS.ACCEPTED, ORDER_STATUS.PREPARING];
 
 const ADVANCE = {
   [ORDER_STATUS.PAID]: ORDER_STATUS.ACCEPTED,
@@ -129,17 +174,20 @@ function ensureRider(order, vendor) {
   return { rider, delivery };
 }
 
-function setStatus(order, status, extra = {}) {
+/** Moves an order to `status`, tells the customer and emits `order:status`. */
+export function updateOrderStatus(order, status, extra = {}, by = null) {
   const at = new Date().toISOString();
   order.status = status;
   order.statusHistory.push({
     status,
     at,
-    by: [ORDER_STATUS.RIDER_ASSIGNED, ORDER_STATUS.PICKED_UP, ORDER_STATUS.DELIVERED].includes(
-      status,
-    )
-      ? 'rider'
-      : 'vendor',
+    by:
+      by ??
+      ([ORDER_STATUS.RIDER_ASSIGNED, ORDER_STATUS.PICKED_UP, ORDER_STATUS.DELIVERED].includes(
+        status,
+      )
+        ? 'rider'
+        : 'vendor'),
   });
   order.updatedAt = at;
   notify(order.customerId, {
@@ -190,17 +238,19 @@ function step(orderId, state) {
   const order = findById('orders', orderId);
   if (!order) return stop(orderId);
   const vendor = findById('vendors', order.vendorId);
+  // The vendor is at their dashboard: wait for them to accept, prepare and mark ready
+  if (vendorWatchers.has(order.vendorId) && VENDOR_STEPS.includes(order.status)) return undefined;
   const next = ADVANCE[order.status];
 
   if (next === ORDER_STATUS.RIDER_ASSIGNED) {
     const { rider, delivery } = ensureRider(order, vendor);
     state.route = null;
-    return setStatus(order, next, {
+    return updateOrderStatus(order, next, {
       rider: riderSummary(rider),
       delivery: publicDelivery(delivery),
     });
   }
-  if (next) return setStatus(order, next);
+  if (next) return updateOrderStatus(order, next);
 
   if (order.status === ORDER_STATUS.RIDER_ASSIGNED) {
     const { rider, delivery } = ensureRider(order, vendor);
@@ -212,7 +262,7 @@ function step(orderId, state) {
       delivery.status = 'picked_up';
       delivery.pickedUpAt = new Date().toISOString();
       state.route = null;
-      setStatus(order, ORDER_STATUS.PICKED_UP, { rider: riderSummary(rider) });
+      updateOrderStatus(order, ORDER_STATUS.PICKED_UP, { rider: riderSummary(rider) });
     }
     return persist();
   }
@@ -229,7 +279,7 @@ function step(orderId, state) {
       delivery.deliveredAt = now;
       delivery.riderEarning = Math.round((order.deliveryFee * delivery.payoutPct) / 100);
       rider.tripsCount += 1;
-      setStatus(order, ORDER_STATUS.DELIVERED, { rider: riderSummary(rider) });
+      updateOrderStatus(order, ORDER_STATUS.DELIVERED, { rider: riderSummary(rider) });
       notify(order.customerId, {
         type: 'order',
         title: 'How was your food?',

@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { VendorEngagement } from '@/features/reports';
 
 export default function EngagementPage() {
-  return <ComingSoon title="Engagement" phase={13} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <VendorEngagement />
+    </div>
+  );
 }

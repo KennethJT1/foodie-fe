@@ -35,6 +35,12 @@ tags:
     description: Vendor onboarding wizard, documents and bank account checks (FR-VEN-01, BR-PAY-02).
   - name: Subscriptions
     description: Plans, free trial, Paystack plan payments, cancel and downgrade (BRD section 4).
+  - name: Vendor
+    description: |
+      The vendor's store: order steps, live queue, menu, sales, engagement, settings and staff.
+      Real time: the vendor dashboard emits `vendor:subscribe` / `vendor:unsubscribe` `{ vendorId }`;
+      the server emits `vendor:order:new` `{ vendorId, orderId, code, total, acceptDeadline }` when a
+      paid order arrives. Orders not accepted by `acceptDeadline` are rejected and refunded (BR-PAY-04).
   - name: Notifications
     description: |
       In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
@@ -1166,6 +1172,286 @@ paths:
         '200': { description: VendorSubscription (cancelAtPeriodEnd false) }
         '409': { description: The plan has already ended }
 
+  /orders/{id}/accept:
+    post:
+      tags: [Vendor]
+      summary: Accept a paid order before its acceptDeadline
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Order (status accepted) }
+        '409': { description: Not in the paid state, or already auto-rejected (INVALID_STATUS) }
+
+  /orders/{id}/reject:
+    post:
+      tags: [Vendor]
+      summary: Reject a paid or accepted order with a reason; the customer is refunded in full
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [reason], properties: { reason: { type: string, maxLength: 200 } } }
+      responses:
+        '200': { description: Order (status rejected) }
+        '409': { description: Already being prepared }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /orders/{id}/preparing:
+    post:
+      tags: [Vendor]
+      summary: Mark an accepted order as being prepared
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Order (status preparing) }
+        '409': { description: Wrong status }
+
+  /orders/{id}/ready:
+    post:
+      tags: [Vendor]
+      summary: Mark as ready for pickup; dispatch starts looking for a rider
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Order (status ready_for_pickup) }
+        '409': { description: Wrong status }
+
+  /vendor/stats:
+    get:
+      tags: [Vendor]
+      summary: Overview numbers for today, waiting orders, rating, a daily sales series and top dishes
+      parameters: [{ name: days, in: query, schema: { type: integer, default: 14, maximum: 90 } }]
+      responses:
+        '200':
+          description: |
+            `{ today: { orders, sales, ordersChange, salesChange }, waiting, inProgress, rating,
+            ratingCount, followersCount, isPaused, series: [{ date, orders, sales }],
+            topItems: [{ foodItemId, name, quantity, sales }] }` (money in kobo, dates are Lagos days)
+
+  /vendor/sales:
+    get:
+      tags: [Vendor]
+      summary: Food money per order with its Paystack settlement status
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: settlementStatus, in: query, schema: { type: string, enum: [settling, settled, refunded] } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: |
+            Rows `{ id, orderId, orderCode, customerName, amount, settlementStatus, reference, createdAt }`;
+            `meta.summary` = `{ settling, settled, refunded }` over the whole filtered range
+
+  /vendor/sales/daily:
+    get:
+      tags: [Vendor]
+      summary: Food sales per Lagos day, newest first
+      parameters: [{ name: days, in: query, schema: { type: integer, default: 30, maximum: 90 } }]
+      responses:
+        '200': { description: 'Array of { date, orders, amount, settling, settled }' }
+
+  /vendor/menu:
+    get:
+      tags: [Vendor]
+      summary: The vendor's own menu, including sold-out items
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: categoryId, in: query, schema: { type: string } }
+        - { name: availability, in: query, schema: { type: string, enum: [available, sold_out] } }
+      responses:
+        '200': { description: 'Page of food items; meta.limits = { menuItems, photosPerItem, planName, used }' }
+    post:
+      tags: [Vendor]
+      summary: Add a menu item within the plan's item and photo limits
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MenuItemInput' } } }
+      responses:
+        '201': { description: Food item }
+        '409': { description: Plan item limit reached (PLAN_LIMIT) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/menu/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Vendor]
+      summary: One of the vendor's menu items, with the plan limits
+      responses:
+        '200': { description: Food item plus `limits` }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Vendor]
+      summary: Edit a menu item, or just `{ isAvailable }` to mark it sold out / back on sale
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MenuItemInput' } } }
+      responses:
+        '200': { description: Food item }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Vendor]
+      summary: Delete a menu item (past orders keep their own copy)
+      responses:
+        '204': { description: Deleted }
+
+  /vendor/store:
+    get:
+      tags: [Vendor]
+      summary: Store settings (bank shown as the last 4 digits only)
+      responses:
+        '200': { description: 'Store { isPaused, deliveryRadiusKm, prepTimeMins, openingHours, description, logo, cover, bank, bankChangeRequest }' }
+    patch:
+      tags: [Vendor]
+      summary: Update hours, pause orders, delivery radius, prep time or store page details (FR-VEN-03)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isPaused: { type: boolean }
+                deliveryRadiusKm: { type: number, minimum: 1, maximum: 30 }
+                prepTimeMins: { type: integer, minimum: 5, maximum: 120 }
+                description: { type: string, maxLength: 300 }
+                logo: { type: [string, 'null'] }
+                cover: { type: [string, 'null'] }
+                openingHours:
+                  type: array
+                  minItems: 7
+                  maxItems: 7
+                  items:
+                    type: object
+                    properties:
+                      open: { type: string, example: '09:00' }
+                      close: { type: string, example: '21:00' }
+                      closed: { type: boolean }
+      responses:
+        '200': { description: Store }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/bank-change:
+    post:
+      tags: [Vendor]
+      summary: Ask to change the settlement account; it is resolved now and approved by an admin (BR-PAY-02)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bankCode, accountNumber]
+              properties: { bankCode: { type: string }, accountNumber: { type: string } }
+      responses:
+        '200': { description: Store with bankChangeRequest (status pending) }
+        '409': { description: A change is already waiting }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/staff:
+    get:
+      tags: [Vendor]
+      summary: Staff logins and the plan limit
+      responses:
+        '200': { description: '{ staff: [{ id, name, email, role, createdAt }], limit, planName }' }
+    post:
+      tags: [Vendor]
+      summary: Invite a staff member (manager or kitchen)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, role]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                role: { type: string, enum: [manager, kitchen] }
+      responses:
+        '201': { description: Staff member }
+        '409': { description: Plan staff limit reached (PLAN_LIMIT) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/staff/{id}:
+    delete:
+      tags: [Vendor]
+      summary: Remove a staff login
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '204': { description: Removed }
+
+  /vendor/engagement:
+    get:
+      tags: [Vendor]
+      summary: Likes, followers, unanswered comments and most liked dishes
+      responses:
+        '200': { description: '{ likesCount, followersCount, newFollowers, unansweredComments, rating, ratingCount, topLiked, recentFollowers }' }
+
+  /vendor/comments:
+    get:
+      tags: [Vendor]
+      summary: Customers' comments on the vendor's dishes; reply with POST /food-items/{id}/comments and parentId
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - { name: answered, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: 'Page of { id, foodItemId, foodItemName, authorName, body, createdAt, isAnswered, reply }' }
+
+  /reviews/{id}/reply:
+    post:
+      tags: [Reviews]
+      summary: The vendor replies once to a review of their store
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [body], properties: { body: { type: string, maxLength: 500 } } }
+      responses:
+        '200': { description: Review with reply }
+        '409': { description: Already replied }
+
+  /refunds/{id}/respond:
+    post:
+      tags: [Refunds]
+      summary: The vendor accepts (full or part) or rejects a refund request before the deadline (BR-REF-03)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [accepted, rejected] }
+                amount: { type: integer, description: kobo, up to the food subtotal; required when accepted }
+                reason: { type: string, maxLength: 500, description: required when rejected }
+      responses:
+        '200': { description: Refund (accepted or rejected) }
+        '409': { description: Already answered }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /refunds/{id}/mark-paid:
+    post:
+      tags: [Refunds]
+      summary: The vendor records the refund payment reference; the customer is asked to confirm
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [reference], properties: { reference: { type: string } } }
+      responses:
+        '200': { description: Refund (status paid) }
+        '409': { description: Not accepted yet }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1647,6 +1933,35 @@ components:
             accountNumber: { type: string }
             accountName: { type: string }
             verified: { type: boolean }
+
+    MenuItemInput:
+      type: object
+      properties:
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        categoryId: { type: string }
+        price: { type: integer, description: kobo }
+        portion: { type: string }
+        prepTimeMins: { type: integer }
+        photos: { type: array, items: { type: string }, description: up to the plan's photosPerItem }
+        isAvailable: { type: boolean }
+        availableDays: { type: array, items: { type: integer, minimum: 0, maximum: 6 } }
+        availableFrom: { type: [string, 'null'], example: '07:00' }
+        availableTo: { type: [string, 'null'], example: '11:00' }
+        optionGroups:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              required: { type: boolean }
+              max: { type: integer }
+              options:
+                type: array
+                items:
+                  type: object
+                  properties: { id: { type: string }, name: { type: string }, price: { type: integer } }
 
   responses:
     Session:
