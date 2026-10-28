@@ -1,6 +1,7 @@
 // Public exports of the payments feature. Other features import only from here.
 export { banksApi } from './api/banks.api';
 export { paymentsApi } from './api/payments.api';
+export { AdminPayments } from './components/AdminPayments';
 export { BankAccountFields, useAccountCheck } from './components/BankAccountFields';
 export { MockPaystackSheet } from './components/MockPaystackSheet';
 export { PaymentHistory } from './components/PaymentHistory';

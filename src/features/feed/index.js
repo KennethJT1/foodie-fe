@@ -1,6 +1,7 @@
 // Public exports of the feed feature. Other features import only from here.
 export { feedApi } from './api/feed.api';
 export { CommentInbox } from './components/CommentInbox';
+export { ModerationQueue } from './components/ModerationQueue';
 export { CommentThread } from './components/CommentThread';
 export { FoodDetail } from './components/FoodDetail';
 export { FoodPost } from './components/FoodPost';

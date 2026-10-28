@@ -125,3 +125,25 @@ export function useReplyToComment() {
     },
   });
 }
+
+export const useModerationQueue = (params) =>
+  useQuery({
+    queryKey: queryKeys.moderation.list(params),
+    queryFn: () => feedApi.adminReports(params),
+    placeholderData: keepPreviousData,
+  });
+
+const RESOLVED = { hide: 'Hidden', remove: 'Removed', dismiss: 'Report dismissed' };
+
+export function useResolveReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: feedApi.resolveReport,
+    onSuccess: (_r, { action }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.moderation.all });
+      qc.invalidateQueries({ queryKey: queryKeys.comments.all });
+      toast.success(RESOLVED[action]);
+    },
+    onError: (e) => toast.error(e),
+  });
+}

@@ -36,3 +36,5 @@ export const useConfirmRefund = () => useRefundMutation(refundsApi.confirm);
 export const useDisputeRefund = () => useRefundMutation(refundsApi.dispute);
 export const useRespondToRefund = () => useRefundMutation(refundsApi.respond);
 export const useMarkRefundPaid = () => useRefundMutation(refundsApi.markPaid);
+export const useCommentOnRefund = () => useRefundMutation(refundsApi.comment);
+export const useEscalateRefund = () => useRefundMutation(refundsApi.escalate);

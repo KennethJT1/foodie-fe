@@ -41,3 +41,29 @@ export function useRiderDecision() {
     onError: (e) => toast.error(e),
   });
 }
+
+export const useAdminPayouts = (params) =>
+  useQuery({
+    queryKey: ['admin', 'payouts', params],
+    queryFn: () => adminRidersApi.payouts(params),
+    placeholderData: keepPreviousData,
+  });
+
+const usePayoutMutation = (mutationFn, message) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: (s) => {
+      qc.invalidateQueries({ queryKey: ['admin', 'payouts'] });
+      toast.success(message(s));
+    },
+  });
+};
+
+export const useApprovePayout = () =>
+  usePayoutMutation(
+    adminRidersApi.approvePayout,
+    (s) => `${s.riderName}'s ${s.month} statement approved`,
+  );
+export const useMarkPayoutPaid = () =>
+  usePayoutMutation(adminRidersApi.markPayoutPaid, (s) => `${s.riderName}'s payout marked paid`);

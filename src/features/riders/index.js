@@ -3,6 +3,7 @@ export { adminRidersApi } from './api/admin-riders.api';
 export { ridersApi } from './api/riders.api';
 export { ActiveDelivery } from './components/ActiveDelivery';
 export { AdminRiderDetail } from './components/admin/AdminRiderDetail';
+export { AdminPayouts } from './components/admin/AdminPayouts';
 export { AdminRiderList } from './components/admin/AdminRiderList';
 export { EarningsView } from './components/EarningsView';
 export { JobOfferCard } from './components/JobOfferCard';

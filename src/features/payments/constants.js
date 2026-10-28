@@ -10,3 +10,10 @@ export const PAYMENT_STATUS_META = {
   failed: { label: 'Failed', tone: 'danger' },
   pending: { label: 'Pending', tone: 'warning' },
 };
+
+export const PAYMENT_FLAG_LABELS = {
+  amount_mismatch: 'Amount does not match Paystack',
+  missing_webhook: 'No Paystack webhook yet',
+};
+
+export const PAYMENT_TYPE_LABELS = { order: 'Order', subscription: 'Plan' };

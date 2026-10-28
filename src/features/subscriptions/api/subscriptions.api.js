@@ -11,4 +11,11 @@ export const subscriptionsApi = {
   scheduleChange: (body) => api.post('/vendor/subscription/change', body).then(unwrap),
   cancel: () => api.post('/vendor/subscription/cancel').then(unwrap),
   resume: () => api.post('/vendor/subscription/resume').then(unwrap),
+  // Admin
+  adminPlans: () => api.get('/admin/plans').then(unwrapList),
+  savePlan: ({ id, ...body }) =>
+    (id ? api.patch(`/admin/plans/${id}`, body) : api.post('/admin/plans', body)).then(unwrap),
+  adminList: (params) => api.get('/admin/subscriptions', { params }).then(unwrapList),
+  extend: ({ id, days, reason }) =>
+    api.post(`/admin/subscriptions/${id}/extend`, { days, reason }).then(unwrap),
 };

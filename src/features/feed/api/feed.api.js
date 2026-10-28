@@ -13,5 +13,8 @@ export const feedApi = {
   deleteComment: (id) => api.delete(`/comments/${id}`).then(unwrap),
   /** Comments on the signed-in vendor's dishes (`answered=false` = waiting for a reply). */
   vendorComments: (params) => api.get('/vendor/comments', { params }).then(unwrapList),
+  adminReports: (params) => api.get('/admin/reports', { params }).then(unwrapList),
+  resolveReport: ({ id, action }) =>
+    api.post(`/admin/reports/${id}/resolve`, { action }).then(unwrap),
   report: (body) => api.post('/reports', body).then(unwrap),
 };

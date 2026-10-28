@@ -1,5 +1,11 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { PageHeader } from '@/components/data';
+import { AdminSubscriptionList } from '@/features/subscriptions';
 
 export default function SubscriptionsPage() {
-  return <ComingSoon title="Subscriptions" phase={16} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <PageHeader title="Subscriptions" description="Every vendor's plan, soonest to end first." />
+      <AdminSubscriptionList />
+    </div>
+  );
 }

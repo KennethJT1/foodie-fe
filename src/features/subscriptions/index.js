@@ -1,5 +1,7 @@
 // Public exports of the subscriptions feature. Other features import only from here.
 export { subscriptionsApi } from './api/subscriptions.api';
+export { AdminPlans } from './components/admin/AdminPlans';
+export { AdminSubscriptionList } from './components/admin/AdminSubscriptionList';
 export { InvoiceTable } from './components/InvoiceTable';
 export { PlanCard } from './components/PlanCard';
 export { PlansView } from './components/PlansView';
