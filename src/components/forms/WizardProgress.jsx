@@ -2,27 +2,26 @@ import { Check } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 
-import { ONBOARDING_STEPS } from '../../constants';
-
 /**
- * Step pills: done steps can be reopened, the current one is a filled orange pill.
+ * Step pills for a wizard: done steps can be reopened, the current one is a filled orange pill.
  * Phones get "Step 2 of 6" and a progress bar instead of the full list.
+ * `steps`: [{ key, label }]; `reached`: index of the furthest step the person may open.
  */
-export function WizardProgress({ current, reached, onSelect }) {
-  const index = ONBOARDING_STEPS.findIndex((s) => s.key === current);
-  const percent = Math.round(((index + 1) / ONBOARDING_STEPS.length) * 100);
+export function WizardProgress({ steps, current, reached, onSelect, label = 'Steps' }) {
+  const index = steps.findIndex((s) => s.key === current);
+  const percent = Math.round(((index + 1) / steps.length) * 100);
   return (
-    <nav aria-label="Onboarding steps" className="mb-4 md:mb-6">
+    <nav aria-label={label} className="mb-4 md:mb-6">
       <div className="sm:hidden">
         <p className="text-sm font-medium">
-          Step {index + 1} of {ONBOARDING_STEPS.length} · {ONBOARDING_STEPS[index].label}
+          Step {index + 1} of {steps.length} · {steps[index].label}
         </p>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
           <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
         </div>
       </div>
       <ol className="hidden flex-wrap gap-2 sm:flex">
-        {ONBOARDING_STEPS.map((s, i) => {
+        {steps.map((s, i) => {
           const isCurrent = s.key === current;
           const isOpen = i <= reached;
           return (

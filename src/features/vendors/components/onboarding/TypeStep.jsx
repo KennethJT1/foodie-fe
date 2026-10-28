@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
+import { StepCard } from '@/components/forms';
 import { RadioGroup } from '@/components/ui';
 
-import { StepCard } from './StepCard';
 import { useSaveOnboardingStep } from '../../hooks/useOnboarding';
 
 const TYPES = [

@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { RiderOnboardingWizard } from '@/features/riders';
 
 export default function OnboardingPage() {
-  return <ComingSoon title="Become a rider" phase={14} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <RiderOnboardingWizard />
+    </div>
+  );
 }

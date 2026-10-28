@@ -22,9 +22,12 @@ const options = {
   approachSteps: 6,
   deliverySteps: 10,
   newOrderMs: isTest ? 0 : 60000,
+  offerDelayMs: isTest ? 0 : 4000,
 };
 const running = new Map(); // orderId -> { timer, subscribers, route, index }
 const vendorWatchers = new Map(); // vendorId -> { count, timer }
+const riderWatchers = new Map(); // riderId -> count
+const offerTimers = new Map(); // riderId -> timeout
 let registered = false;
 
 export function configureOrderSimulation(next) {
@@ -36,6 +39,9 @@ export function stopOrderSimulations() {
   running.clear();
   vendorWatchers.forEach((w) => clearInterval(w.timer));
   vendorWatchers.clear();
+  riderWatchers.clear();
+  offerTimers.forEach((t) => clearTimeout(t));
+  offerTimers.clear();
 }
 
 /** Listens for subscriptions from the app. Safe to call more than once. */
@@ -46,6 +52,136 @@ export function registerRealtime() {
   onClientEmit('order:unsubscribe', (payload) => unsubscribe(payload?.orderId));
   onClientEmit('vendor:subscribe', (payload) => watchVendor(payload?.vendorId));
   onClientEmit('vendor:unsubscribe', (payload) => unwatchVendor(payload?.vendorId));
+  onClientEmit('rider:subscribe', ({ riderId } = {}) => {
+    if (riderId) riderWatchers.set(riderId, (riderWatchers.get(riderId) ?? 0) + 1);
+  });
+  onClientEmit('rider:unsubscribe', ({ riderId } = {}) => {
+    const n = (riderWatchers.get(riderId) ?? 1) - 1;
+    if (n <= 0) riderWatchers.delete(riderId);
+    else riderWatchers.set(riderId, n);
+  });
+  onClientEmit('rider:location', (payload) => receiveRiderLocation(payload));
+}
+
+/** A rider's phone reports where they are; customers watching their order see it move. */
+function receiveRiderLocation({ riderId, lat, lng, heading } = {}) {
+  const rider = riderId && findById('riders', riderId);
+  if (!rider || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  Object.assign(rider, { lat, lng, lastSeenAt: new Date().toISOString() });
+  const order = db.orders.find((o) => o.riderId === rider.id && isMoving(o.status));
+  if (order) {
+    const target =
+      order.status === ORDER_STATUS.PICKED_UP ? order.address : findById('vendors', order.vendorId);
+    const etaMins = etaFor({ lat, lng }, target);
+    order.etaMins = etaMins;
+    db.deliveries
+      .find((d) => d.orderId === order.id)
+      ?.route.push({ lat, lng, at: rider.lastSeenAt });
+    serverEmit('rider:location', {
+      orderId: order.id,
+      riderId,
+      lat,
+      lng,
+      heading,
+      etaMins,
+      at: rider.lastSeenAt,
+    });
+  }
+  persist();
+}
+
+const hasActiveDelivery = (riderId) =>
+  db.orders.some((o) => o.riderId === riderId && isMoving(o.status));
+
+/** A ready order near the rider, or a fresh demo order from a nearby vendor (marked ready). */
+function orderForOffer(rider) {
+  const offered = new Set(
+    (db.jobOffers ?? []).filter((o) => o.status === 'pending').map((o) => o.orderId),
+  );
+  const ready = db.orders
+    .filter((o) => o.status === ORDER_STATUS.READY_FOR_PICKUP && !o.riderId && !offered.has(o.id))
+    .map((o) => ({ o, v: findById('vendors', o.vendorId) }))
+    .filter(({ v }) => v?.city === rider.city)
+    .sort((a, b) => distanceMetres(a.v, rider) - distanceMetres(b.v, rider))[0]?.o;
+  if (ready) return ready;
+  const vendor = db.vendors
+    .filter((v) => v.approvalStatus === 'approved' && v.city === rider.city && !v.isPaused)
+    .sort((a, b) => distanceMetres(a, rider) - distanceMetres(b, rider))[0];
+  const order = vendor && createDemoOrder(vendor);
+  if (!order) return null;
+  const at = new Date().toISOString();
+  for (const status of [
+    ORDER_STATUS.ACCEPTED,
+    ORDER_STATUS.PREPARING,
+    ORDER_STATUS.READY_FOR_PICKUP,
+  ])
+    order.statusHistory.push({ status, at, by: 'vendor' });
+  order.status = ORDER_STATUS.READY_FOR_PICKUP;
+  return order;
+}
+
+/** Sends the rider a 30-second job offer (`rider:job:offer`). Returns the offer or null. */
+export function createJobOffer(riderId) {
+  const rider = findById('riders', riderId);
+  if (!rider?.isOnline || hasActiveDelivery(riderId)) return null;
+  if (
+    (db.jobOffers ?? []).some(
+      (o) =>
+        o.riderId === riderId && o.status === 'pending' && o.expiresAt > new Date().toISOString(),
+    )
+  )
+    return null;
+  const order = orderForOffer(rider);
+  if (!order) return null;
+  const vendor = findById('vendors', order.vendorId);
+  const now = Date.now();
+  const offer = {
+    id: newId('off'),
+    orderId: order.id,
+    orderCode: order.code,
+    riderId,
+    status: 'pending',
+    fee: order.deliveryFee,
+    earning: Math.round((order.deliveryFee * db.settings.riderPayoutPct) / 100),
+    distanceM: order.distanceM,
+    toPickupM: rider.lat == null ? null : distanceMetres(rider, vendor),
+    pickup: {
+      name: vendor.name,
+      area: vendor.address?.area ?? '',
+      lat: vendor.lat,
+      lng: vendor.lng,
+    },
+    dropoff: {
+      area: order.address.area,
+      city: order.address.city,
+      lat: order.address.lat,
+      lng: order.address.lng,
+    },
+    expiresAt: new Date(now + db.settings.riderOfferTimeoutSec * 1000).toISOString(),
+    createdAt: new Date(now).toISOString(),
+  };
+  (db.jobOffers ??= []).unshift(offer);
+  persist();
+  serverEmit('rider:job:offer', offer);
+  return offer;
+}
+
+/** Queues the next offer for an online rider (after going online, declining or delivering). */
+export function scheduleJobOffer(riderId, delayMs = options.offerDelayMs) {
+  if (!options.enabled || !delayMs) return;
+  clearTimeout(offerTimers.get(riderId));
+  offerTimers.set(
+    riderId,
+    setTimeout(() => {
+      offerTimers.delete(riderId);
+      createJobOffer(riderId);
+    }, delayMs),
+  );
+}
+
+export function cancelJobOffers(riderId) {
+  clearTimeout(offerTimers.get(riderId));
+  offerTimers.delete(riderId);
 }
 
 function watchVendor(vendorId) {
@@ -115,7 +251,7 @@ function stop(orderId) {
 
 const isMoving = (s) => s === ORDER_STATUS.RIDER_ASSIGNED || s === ORDER_STATUS.PICKED_UP;
 
-function riderSummary(rider) {
+export function riderSummary(rider) {
   return {
     id: rider.id,
     name: rider.name,
@@ -240,6 +376,9 @@ function step(orderId, state) {
   const vendor = findById('vendors', order.vendorId);
   // The vendor is at their dashboard: wait for them to accept, prepare and mark ready
   if (vendorWatchers.has(order.vendorId) && VENDOR_STEPS.includes(order.status)) return undefined;
+  // A rider is using the app: dispatch goes through job offers and the rider moves themselves
+  if (order.status === ORDER_STATUS.READY_FOR_PICKUP && riderWatchers.size) return undefined;
+  if (isMoving(order.status) && riderWatchers.has(order.riderId)) return undefined;
   const next = ADVANCE[order.status];
 
   if (next === ORDER_STATUS.RIDER_ASSIGNED) {
@@ -295,7 +434,7 @@ function step(orderId, state) {
   return stop(orderId);
 }
 
-const publicDelivery = (d) => ({
+export const publicDelivery = (d) => ({
   id: d.id,
   status: d.status,
   pickup: d.pickup,

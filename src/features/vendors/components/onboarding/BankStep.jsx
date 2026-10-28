@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
-import { StepCard } from './StepCard';
+import { StepCard } from '@/components/forms';
+import { BankAccountFields, useAccountCheck } from '@/features/payments';
+
 import { useSaveOnboardingStep } from '../../hooks/useOnboarding';
-import { BankAccountFields, useAccountCheck } from '../BankAccountFields';
 
 /** Settlement account: the name is looked up from the bank before it can be saved (BR-PAY-02). */
 export function BankStep({ data, onNext, onBack }) {

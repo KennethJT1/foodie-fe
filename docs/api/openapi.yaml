@@ -41,6 +41,12 @@ tags:
       Real time: the vendor dashboard emits `vendor:subscribe` / `vendor:unsubscribe` `{ vendorId }`;
       the server emits `vendor:order:new` `{ vendorId, orderId, code, total, acceptDeadline }` when a
       paid order arrives. Orders not accepted by `acceptDeadline` are rejected and refunded (BR-PAY-04).
+  - name: Rider
+    description: |
+      Rider onboarding, going online, job offers, the active delivery, trips and earnings.
+      Real time: while online the app emits `rider:subscribe` / `rider:unsubscribe` `{ riderId }`
+      and `rider:location` `{ riderId, lat, lng, heading }` every 5–10 s; the server emits
+      `rider:job:offer` (a JobOffer) and forwards the position to the customer as `rider:location`.
   - name: Notifications
     description: |
       In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
@@ -1452,6 +1458,182 @@ paths:
         '200': { description: Refund (status paid) }
         '409': { description: Not accepted yet }
 
+  /rider/onboarding:
+    get:
+      tags: [Rider]
+      summary: The rider's application, saved step and approval status
+      responses:
+        '200': { description: 'RiderOnboarding { step, approvalStatus, rejectionReason, vehicleType, plateNumber, licenceNumber, guarantor, documents, requiredDocuments, bank }' }
+    patch:
+      tags: [Rider]
+      summary: Save one wizard step
+      description: |
+        - `vehicle`: `vehicleType` (motorcycle | bicycle | car), `plateNumber` (not for bicycles), `licenceNumber`
+        - `guarantor`: `guarantor { name, phone, relationship, address }`
+        - `documents`: no fields; checks every required document is uploaded
+        - `bank`: `bankCode`, `accountNumber`; the account name is resolved and stored
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [step]
+              properties: { step: { type: string, enum: [vehicle, guarantor, documents, bank] } }
+              additionalProperties: true
+      responses:
+        '200': { description: Updated application }
+        '409': { description: Already submitted }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /rider/onboarding/submit:
+    post:
+      tags: [Rider]
+      summary: Send the application for admin review (status pending)
+      responses:
+        '200': { description: Updated application }
+        '422': { description: Some steps are not finished }
+
+  /rider/documents:
+    post:
+      tags: [Rider]
+      summary: Attach an uploaded document (one per type)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [type, url], properties: { type: { type: string }, url: { type: string } } }
+      responses:
+        '201': { description: Document }
+
+  /rider/documents/{id}:
+    delete:
+      tags: [Rider]
+      summary: Remove a document before submitting
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '204': { description: Removed }
+
+  /rider/me:
+    get:
+      tags: [Rider]
+      summary: Rider profile, online state, rating and payout account (last 4 digits)
+      responses:
+        '200': { description: RiderProfile }
+
+  /rider/status:
+    post:
+      tags: [Rider]
+      summary: Go online (job offers start) or offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isOnline]
+              properties:
+                isOnline: { type: boolean }
+                lat: { type: number }
+                lng: { type: number }
+      responses:
+        '200': { description: RiderProfile }
+        '409': { description: Not approved (NOT_APPROVED) }
+
+  /rider/offers:
+    get:
+      tags: [Rider]
+      summary: Job offers still waiting for an answer
+      responses:
+        '200':
+          description: Offers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { type: array, items: { $ref: '#/components/schemas/JobOffer' } } }
+
+  /deliveries/offers/{id}/accept:
+    post:
+      tags: [Rider]
+      summary: Accept a job offer before it expires; the order moves to rider_assigned
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: ActiveDelivery }
+        '409': { description: Expired or taken by another rider (OFFER_GONE) }
+
+  /deliveries/offers/{id}/decline:
+    post:
+      tags: [Rider]
+      summary: Decline (or let expire) a job offer; another offer follows while online
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: JobOffer (declined or expired) }
+
+  /rider/delivery:
+    get:
+      tags: [Rider]
+      summary: The rider's current delivery, or null
+      responses:
+        '200':
+          description: |
+            ActiveDelivery `{ id, orderId, orderCode, status, fee, earning, distanceM, itemCount,
+            pickup { name, phone, address, lat, lng }, dropoff { name, phone, address, note, lat, lng },
+            assignedAt, pickedUpAt }` or null
+
+  /deliveries/{id}/pickup:
+    post:
+      tags: [Rider]
+      summary: Confirm pickup at the vendor (order picked_up)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: ActiveDelivery }
+        '409': { description: Already picked up }
+
+  /deliveries/{id}/complete:
+    post:
+      tags: [Rider]
+      summary: Hand over with the customer's 4-digit delivery code (order delivered)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [code], properties: { code: { type: string, pattern: '^\d{4}$' } } }
+      responses:
+        '200': { description: '{ id, status: delivered, earning, orderCode }' }
+        '409': { description: Not picked up yet }
+        '422': { description: The code does not match (fieldErrors.code) }
+
+  /rider/trips:
+    get:
+      tags: [Rider]
+      summary: Completed deliveries
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: 'Page of { id, orderId, orderCode, vendorName, dropoffArea, distanceM, fee, earning, deliveredAt }' }
+
+  /rider/earnings:
+    get:
+      tags: [Rider]
+      summary: This month's trips, delivery fees and earnings (payout % of fees, BR-PAY-06)
+      responses:
+        '200': { description: '{ month, payoutPct, trips, deliveryFees, earnings, today: { trips, earnings } }' }
+
+  /rider/statements:
+    get:
+      tags: [Rider]
+      summary: Monthly payout statements, newest first
+      responses:
+        '200': { description: 'Array of { id, month, trips, deliveryFees, payoutPct, amount, adjustments, status, reference, approvedAt, paidAt }' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1962,6 +2144,22 @@ components:
                 items:
                   type: object
                   properties: { id: { type: string }, name: { type: string }, price: { type: integer } }
+
+    JobOffer:
+      type: object
+      properties:
+        id: { type: string }
+        orderId: { type: string }
+        orderCode: { type: string }
+        riderId: { type: string }
+        status: { type: string, enum: [pending, accepted, declined, expired] }
+        fee: { type: integer, description: delivery fee in kobo }
+        earning: { type: integer, description: the rider's share in kobo }
+        distanceM: { type: integer, description: vendor to customer }
+        toPickupM: { type: [integer, 'null'], description: rider to vendor }
+        pickup: { type: object, properties: { name: { type: string }, area: { type: string }, lat: { type: number }, lng: { type: number } } }
+        dropoff: { type: object, properties: { area: { type: string }, city: { type: string }, lat: { type: number }, lng: { type: number } } }
+        expiresAt: { type: string, format: date-time, description: 30 seconds after it was sent }
 
   responses:
     Session:

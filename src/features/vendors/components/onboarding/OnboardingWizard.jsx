@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 
 import { PageHeader } from '@/components/data';
 import { ErrorState, Skeleton, SkeletonText } from '@/components/feedback';
+import { WizardProgress } from '@/components/forms';
 import { ROUTES } from '@/constants/routes';
 import { APPROVAL_STATUS } from '@/constants/statuses';
 
@@ -13,7 +14,6 @@ import { DocumentsStep } from './DocumentsStep';
 import { LocationStep } from './LocationStep';
 import { ReviewStep } from './ReviewStep';
 import { TypeStep } from './TypeStep';
-import { WizardProgress } from './WizardProgress';
 import { ONBOARDING_STEPS } from '../../constants';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { nextStep, prevStep, reachedIndex } from '../../lib/onboarding';
@@ -73,7 +73,13 @@ export function OnboardingWizard() {
           </div>
         </div>
       )}
-      <WizardProgress current={current} reached={reached} onSelect={goTo} />
+      <WizardProgress
+        steps={ONBOARDING_STEPS}
+        label="Onboarding steps"
+        current={current}
+        reached={reached}
+        onSelect={goTo}
+      />
       <Step
         key={current}
         data={data}

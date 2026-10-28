@@ -3,10 +3,10 @@ import { useState } from 'react';
 
 import { toast } from '@/components/feedback';
 import { Badge, Button, Card, CardTitle, Modal } from '@/components/ui';
+import { BankAccountFields, useAccountCheck } from '@/features/payments';
 import { formatDate } from '@/lib/format';
 
 import { useRequestBankChange } from '../../hooks/useStore';
-import { BankAccountFields, useAccountCheck } from '../BankAccountFields';
 
 function BankChangeDialog({ open, onClose }) {
   const [value, setValue] = useState({ bankCode: '', accountNumber: '' });

@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { TripsList } from '@/features/riders';
 
 export default function TripsPage() {
-  return <ComingSoon title="Trips" phase={14} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <TripsList />
+    </div>
+  );
 }

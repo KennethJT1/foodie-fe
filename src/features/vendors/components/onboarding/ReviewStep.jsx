@@ -2,13 +2,13 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { toast } from '@/components/feedback';
+import { StepCard } from '@/components/forms';
 import { Button } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
 import { VENDOR_TYPE_LABELS } from '@/constants/statuses';
 import { formatAddress } from '@/features/auth';
 import { formatPhone } from '@/lib/format';
 
-import { StepCard } from './StepCard';
 import { useSubmitOnboarding } from '../../hooks/useOnboarding';
 import { missingDocuments } from '../../lib/onboarding';
 

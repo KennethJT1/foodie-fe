@@ -1,10 +1,9 @@
 import { useState } from 'react';
 
 import { toast } from '@/components/feedback';
-import { ImageUploadControl } from '@/components/forms';
+import { ImageUploadControl, StepCard } from '@/components/forms';
 import { compressImage } from '@/lib/image';
 
-import { StepCard } from './StepCard';
 import {
   useRemoveDocument,
   useSaveOnboardingStep,

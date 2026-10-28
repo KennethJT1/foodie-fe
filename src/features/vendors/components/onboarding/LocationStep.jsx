@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
+import { StepCard } from '@/components/forms';
 import { AddressPicker } from '@/components/maps';
 import { Select } from '@/components/ui';
 import { addressErrors } from '@/features/auth';
 
-import { StepCard } from './StepCard';
 import { DELIVERY_RADIUS_OPTIONS, PREP_TIME_OPTIONS } from '../../constants';
 import { useSaveOnboardingStep } from '../../hooks/useOnboarding';
 

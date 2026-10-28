@@ -18,6 +18,7 @@ import { vendorNav } from '@/layouts/nav/vendor';
 import PublicLayout from '@/layouts/PublicLayout';
 import { env } from '@/lib/env';
 
+import { RiderBanner } from './RiderBanner';
 import { RootLayout } from './RootLayout';
 import { RouteError } from './RouteError';
 import { VendorBanner } from './VendorBanner';
@@ -180,6 +181,7 @@ export const routes = [
                 home="/rider"
                 notificationsTo="/rider/notifications"
                 profileTo="/rider/profile"
+                banner={RiderBanner}
               />
             </RequireRole>
           </RequireAuth>

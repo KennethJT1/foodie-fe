@@ -1,4 +1,5 @@
-import { Button, Card, CardTitle } from '@/components/ui';
+import { Button } from '@/components/ui/Button';
+import { Card, CardTitle } from '@/components/ui/Card';
 
 /**
  * Shell for one wizard step: title, body and a Back / Continue footer.

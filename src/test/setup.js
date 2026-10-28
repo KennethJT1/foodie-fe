@@ -12,7 +12,7 @@ import { useCartStore } from '@/stores/cart-store';
 import { useUiStore } from '@/stores/ui-store';
 
 // Lazy route chunks load cold in the first test of each file; give findBy* room on slow machines
-configure({ asyncUtilTimeout: 3000 });
+configure({ asyncUtilTimeout: 5000 });
 
 registerMockSocket(createMockSocket);
 registerRealtime();

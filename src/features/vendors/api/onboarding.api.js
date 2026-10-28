@@ -8,8 +8,3 @@ export const onboardingApi = {
   uploadDocument: (body) => api.post('/vendor/documents', body).then(unwrap),
   removeDocument: (id) => api.delete(`/vendor/documents/${id}`),
 };
-
-export const banksApi = {
-  list: () => api.get('/banks').then(unwrap),
-  resolve: (body) => api.post('/banks/resolve', body).then(unwrap),
-};
