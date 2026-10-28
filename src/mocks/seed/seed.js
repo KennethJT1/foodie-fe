@@ -432,6 +432,11 @@ export function buildSeed(seed = 2026) {
     subscriptionStatus: 'none',
   });
   Object.assign(newVendor, {
+    type: null,
+    address: null,
+    lat: null,
+    lng: null,
+    city: null,
     onboardingStep: 'type',
     documents: [],
     approvedAt: null,

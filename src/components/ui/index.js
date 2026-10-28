@@ -14,6 +14,7 @@ export { PriceTag } from './PriceTag';
 export { RadioGroup } from './RadioGroup';
 export { Rating } from './Rating';
 export { Select } from './Select';
+export { ShareButton } from './ShareButton';
 export { Spinner } from './Spinner';
 export { Switch } from './Switch';
 export { Tabs } from './Tabs';

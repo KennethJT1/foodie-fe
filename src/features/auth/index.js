@@ -32,6 +32,7 @@ export {
   useResetPassword,
   useSession,
   useSessionBootstrap,
+  useSyncSession,
   useUpdateMe,
   useVerifyOtp,
 } from './hooks/useAuth';

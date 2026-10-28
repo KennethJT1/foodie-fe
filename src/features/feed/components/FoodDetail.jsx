@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { EmptyState, ErrorState, Skeleton, SkeletonText } from '@/components/feedback';
-import { Avatar, Badge, Button, PriceTag } from '@/components/ui';
+import { Avatar, Badge, Button, PriceTag, ShareButton } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
 import { useSession } from '@/features/auth';
 import { AddToCartForm } from '@/features/cart';
@@ -13,7 +13,6 @@ import { formatDistance, formatRating } from '@/lib/format';
 import { CommentThread } from './CommentThread';
 import { LikeButton } from './LikeButton';
 import { ReportDialog } from './ReportDialog';
-import { ShareButton } from './ShareButton';
 
 /** Food detail: photos, options, add to cart, likes, share and comments. */
 export function FoodDetail({ id }) {

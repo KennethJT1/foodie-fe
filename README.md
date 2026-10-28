@@ -37,6 +37,10 @@ Mock data lives in your browser's localStorage. Run `window.__kjtMocks.resetDb()
 console to start fresh. `localStorage.setItem('kjt-mock-chaos', '0.1')` makes 10% of reads fail
 so you can check error states.
 
+On mocks, any 10-digit bank account number resolves to the account owner's name, except numbers
+ending in `0000`, which come back as "account not found". On the Paystack test sheet, pick
+**Simulate a failed payment** to see the failed-payment path.
+
 ## Scripts
 
 | Script               | What it does                        |

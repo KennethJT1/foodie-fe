@@ -31,6 +31,10 @@ tags:
   - name: Payments
   - name: Reviews
   - name: Refunds
+  - name: Onboarding
+    description: Vendor onboarding wizard, documents and bank account checks (FR-VEN-01, BR-PAY-02).
+  - name: Subscriptions
+    description: Plans, free trial, Paystack plan payments, cancel and downgrade (BRD section 4).
   - name: Notifications
     description: |
       In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
@@ -928,6 +932,240 @@ paths:
       responses:
         '200': { description: OK }
 
+  /vendor/onboarding:
+    get:
+      tags: [Onboarding]
+      summary: The signed-in vendor's application, saved step and approval status
+      responses:
+        '200':
+          description: Application
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/VendorOnboarding' } }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      tags: [Onboarding]
+      summary: Save one wizard step. Saved progress only moves forward.
+      description: |
+        Only while the application is `draft` or `rejected`. Fields per step:
+        - `type`: `type` (restaurant | home_cook). Documents for the other type are dropped.
+        - `business`: `name`, `description` (max 300), `phone`, `logo?`, `cover?`
+        - `location`: `address { line1, area, city, state }`, `lat`, `lng`, `deliveryRadiusKm` (1–30), `prepTimeMins` (5–120)
+        - `documents`: no fields; checks every required document is uploaded
+        - `bank`: `bankCode`, `accountNumber` (10 digits); the account name is resolved and stored
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [step]
+              properties:
+                step: { type: string, enum: [type, business, location, documents, bank] }
+              additionalProperties: true
+      responses:
+        '200': { description: Updated application (VendorOnboarding) }
+        '409': { description: Already submitted and not rejected (ALREADY_SUBMITTED) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/onboarding/submit:
+    post:
+      tags: [Onboarding]
+      summary: Send the application for admin review; status becomes pending (FR-VEN-02)
+      responses:
+        '200': { description: Updated application (approvalStatus pending) }
+        '409': { description: Already submitted }
+        '422': { description: Some steps are not finished }
+
+  /vendor/documents:
+    post:
+      tags: [Onboarding]
+      summary: Attach an uploaded document. One per type; a new upload replaces the old one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, url]
+              properties:
+                type: { type: string, example: government_id }
+                url: { type: string, description: URL from the upload service }
+      responses:
+        '201': { description: Document }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/documents/{id}:
+    delete:
+      tags: [Onboarding]
+      summary: Remove a document before submitting
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Removed }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /banks:
+    get:
+      tags: [Onboarding]
+      summary: Nigerian banks supported for settlement (from Paystack)
+      security: []
+      responses:
+        '200': { description: 'Array of { code, name }' }
+
+  /banks/resolve:
+    post:
+      tags: [Onboarding]
+      summary: Look up the account name for a bank account (Paystack resolve)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bankCode, accountNumber]
+              properties:
+                bankCode: { type: string }
+                accountNumber: { type: string, pattern: '^\d{10}$' }
+      responses:
+        '200': { description: '{ bankCode, bankName, accountNumber, accountName }' }
+        '422': { description: 'Unknown bank or account not found (fieldErrors.accountNumber)' }
+
+  /plans:
+    get:
+      tags: [Subscriptions]
+      summary: Plans on sale, cheapest first
+      security: []
+      responses:
+        '200':
+          description: Plans; `meta` carries the trial length and yearly discount
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data: { type: array, items: { $ref: '#/components/schemas/Plan' } }
+                  meta:
+                    type: object
+                    properties:
+                      trialDays: { type: integer }
+                      yearlyDiscountPct: { type: number }
+
+  /vendor/subscription:
+    get:
+      tags: [Subscriptions]
+      summary: The vendor's plan status, current period and whether the free trial is still available
+      responses:
+        '200':
+          description: Subscription state
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties: { data: { $ref: '#/components/schemas/VendorSubscription' } }
+
+  /vendor/subscription/invoices:
+    get:
+      tags: [Subscriptions]
+      summary: The vendor's plan invoices
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - { name: status, in: query, schema: { type: string, enum: [paid, failed] } }
+      responses:
+        '200': { description: 'Page of invoices { id, planId, planName, interval, amount, status, reference, createdAt }' }
+
+  /vendor/subscription/trial:
+    post:
+      tags: [Subscriptions]
+      summary: Start the free trial (once per business, after approval, no card) (BR-SUB-01)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [planId], properties: { planId: { type: string } } }
+      responses:
+        '200': { description: VendorSubscription (status trial) }
+        '409': { description: Not approved yet (NOT_APPROVED) or trial already used (TRIAL_USED) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/subscription/initialize:
+    post:
+      tags: [Subscriptions]
+      summary: Start a Paystack payment for a first plan, a renewal or a prorated upgrade (BR-SUB-03)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanChoice' }
+      responses:
+        '200':
+          description: Transaction ready for the Paystack popup
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          reference: { type: string }
+                          accessCode: { type: string }
+                          amount: { type: integer, description: kobo; prorated for upgrades }
+                          kind: { type: string, enum: [new, upgrade] }
+                          email: { type: string }
+        '409': { description: Already on this plan (SAME_PLAN) or a downgrade (DOWNGRADE_AT_RENEWAL) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /vendor/subscription/verify:
+    post:
+      tags: [Subscriptions]
+      summary: Confirm the plan payment with the gateway and activate the plan (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [reference], properties: { reference: { type: string } } }
+      responses:
+        '200': { description: VendorSubscription (status active); an invoice is recorded }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /vendor/subscription/change:
+    post:
+      tags: [Subscriptions]
+      summary: Schedule a downgrade for the next renewal (BR-SUB-03)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanChoice' }
+      responses:
+        '200': { description: VendorSubscription with scheduledChange }
+        '409': { description: Not a downgrade; pay through initialize instead (PAYMENT_REQUIRED) }
+
+  /vendor/subscription/cancel:
+    post:
+      tags: [Subscriptions]
+      summary: Cancel at period end; access continues until then (BR-SUB-02)
+      responses:
+        '200': { description: VendorSubscription (cancelAtPeriodEnd true) }
+        '409': { description: No running plan }
+
+  /vendor/subscription/resume:
+    post:
+      tags: [Subscriptions]
+      summary: Undo a cancellation before the period ends
+      responses:
+        '200': { description: VendorSubscription (cancelAtPeriodEnd false) }
+        '409': { description: The plan has already ended }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1317,6 +1555,98 @@ components:
         link: { type: [string, 'null'], description: In-app path to open }
         readAt: { type: [string, 'null'], format: date-time }
         createdAt: { type: string, format: date-time }
+
+    Plan:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        monthlyPrice: { type: integer, description: kobo }
+        yearlyPrice: { type: integer, description: 'kobo; 12 × monthly minus the yearly discount' }
+        limits:
+          type: object
+          properties:
+            menuItems: { type: [integer, 'null'], description: null = unlimited }
+            photosPerItem: { type: integer }
+            staff: { type: integer }
+        featured: { type: string, enum: [none, occasional, priority] }
+        analytics: { type: string, enum: [basic, full, export] }
+        isPopular: { type: boolean }
+        sortOrder: { type: integer }
+
+    PlanChoice:
+      type: object
+      required: [planId, interval]
+      properties:
+        planId: { type: string }
+        interval: { type: string, enum: [monthly, yearly] }
+
+    VendorSubscription:
+      type: object
+      properties:
+        status: { type: string, enum: [none, trial, active, grace, expired] }
+        trialAvailable: { type: boolean }
+        trialDays: { type: integer }
+        graceDays: { type: integer }
+        subscription:
+          type: [object, 'null']
+          properties:
+            id: { type: string }
+            planId: { type: string }
+            plan: { $ref: '#/components/schemas/Plan' }
+            interval: { type: string, enum: [monthly, yearly] }
+            amount: { type: integer, description: kobo per period }
+            currentPeriodStart: { type: string, format: date-time }
+            currentPeriodEnd: { type: string, format: date-time }
+            trialEndsAt: { type: [string, 'null'], format: date-time }
+            graceEndsAt: { type: [string, 'null'], format: date-time }
+            cancelAtPeriodEnd: { type: boolean }
+            scheduledChange:
+              type: [object, 'null']
+              properties:
+                planId: { type: string }
+                planName: { type: string }
+                interval: { type: string, enum: [monthly, yearly] }
+
+    VendorOnboarding:
+      type: object
+      properties:
+        step: { type: string, enum: [type, business, location, documents, bank, review, submitted] }
+        approvalStatus: { type: string, enum: [draft, pending, approved, rejected, suspended] }
+        rejectionReason: { type: [string, 'null'] }
+        submittedAt: { type: [string, 'null'], format: date-time }
+        type: { type: [string, 'null'], enum: [restaurant, home_cook, null] }
+        name: { type: string }
+        description: { type: string }
+        phone: { type: string }
+        logo: { type: [string, 'null'] }
+        cover: { type: [string, 'null'] }
+        address: { type: [object, 'null'] }
+        lat: { type: [number, 'null'] }
+        lng: { type: [number, 'null'] }
+        deliveryRadiusKm: { type: number }
+        prepTimeMins: { type: integer }
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              type: { type: string }
+              label: { type: string }
+              url: { type: string }
+              uploadedAt: { type: string, format: date-time }
+        requiredDocuments:
+          type: array
+          items: { type: object, properties: { type: { type: string }, label: { type: string } } }
+        bank:
+          type: [object, 'null']
+          properties:
+            bankCode: { type: string }
+            bankName: { type: string }
+            accountNumber: { type: string }
+            accountName: { type: string }
+            verified: { type: boolean }
 
   responses:
     Session:

@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { OnboardingWizard } from '@/features/vendors';
 
 export default function OnboardingPage() {
-  return <ComingSoon title="Set up your store" phase={12} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <OnboardingWizard />
+    </div>
+  );
 }

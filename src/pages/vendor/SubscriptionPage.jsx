@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { SubscriptionView } from '@/features/subscriptions';
 
 export default function SubscriptionPage() {
-  return <ComingSoon title="Subscription" phase={12} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <SubscriptionView />
+    </div>
+  );
 }

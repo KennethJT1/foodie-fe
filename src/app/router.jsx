@@ -10,6 +10,7 @@ import {
   RequirePermission,
   RequireRole,
 } from '@/features/auth';
+import { SubscriptionBanner } from '@/features/subscriptions';
 import CustomerLayout from '@/layouts/CustomerLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { adminNav } from '@/layouts/nav/admin';
@@ -116,6 +117,7 @@ export const routes = [
                 home="/vendor"
                 notificationsTo="/vendor/notifications"
                 profileTo="/vendor/settings"
+                banner={SubscriptionBanner}
               />
             </RequireRole>
           </RequireAuth>

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 
 import { registerMockSocket } from '@/lib/socket';
@@ -10,6 +10,9 @@ import { createMockSocket } from '@/mocks/socket';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCartStore } from '@/stores/cart-store';
 import { useUiStore } from '@/stores/ui-store';
+
+// Lazy route chunks load cold in the first test of each file; give findBy* room on slow machines
+configure({ asyncUtilTimeout: 3000 });
 
 registerMockSocket(createMockSocket);
 registerRealtime();
