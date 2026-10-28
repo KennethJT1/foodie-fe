@@ -24,7 +24,7 @@ describe('routing and guards (phase 7 done-when)', () => {
   it('sends the wrong role to their own home', async () => {
     const { router } = await renderApp('/admin', { as: 'rider@kjtfoodie.test' });
     await waitFor(() => expect(path(router)).toBe('/rider'));
-    expect(await screen.findByRole('heading', { name: 'Go online' })).toBeInTheDocument();
+    expect(await screen.findByRole('switch', { name: 'Go online' })).toBeInTheDocument();
   });
 
   it('hides admin menu items without permission and shows 403 on the page', async () => {

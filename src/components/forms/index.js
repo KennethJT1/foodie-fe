@@ -14,3 +14,5 @@ export { MoneyInput } from './MoneyInput';
 export { OtpBoxes, OtpInput } from './OtpInput';
 export { PhoneInput } from './PhoneInput';
 export { ReplyForm } from './ReplyForm';
+export { StepCard } from './StepCard';
+export { WizardProgress } from './WizardProgress';

@@ -3,7 +3,7 @@ import { BadgeCheck } from 'lucide-react';
 import { Input, Select, Spinner } from '@/components/ui';
 import { useDebounce } from '@/hooks/useDebounce';
 
-import { useBanks, useResolveAccount } from '../hooks/useOnboarding';
+import { useBanks, useResolveAccount } from '../hooks/useBanks';
 
 /** Resolves the account name for `{ bankCode, accountNumber }`; ready once the bank confirms it. */
 export function useAccountCheck({ bankCode, accountNumber }) {

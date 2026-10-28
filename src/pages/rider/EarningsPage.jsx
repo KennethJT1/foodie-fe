@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { EarningsView } from '@/features/riders';
 
 export default function EarningsPage() {
-  return <ComingSoon title="Earnings" phase={14} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <EarningsView />
+    </div>
+  );
 }

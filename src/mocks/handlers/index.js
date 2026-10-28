@@ -11,6 +11,7 @@ import { onboardingHandlers } from './onboarding';
 import { orderHandlers } from './orders';
 import { refundHandlers } from './refunds';
 import { reviewHandlers } from './reviews';
+import { riderHandlers } from './riders';
 import { socialHandlers } from './social';
 import { subscriptionHandlers } from './subscriptions';
 import { vendorOrderHandlers } from './vendor-orders';
@@ -34,5 +35,6 @@ export const handlers = [
   ...vendorOrderHandlers,
   ...menuHandlers,
   ...vendorStoreHandlers,
+  ...riderHandlers,
   ...devHandlers,
 ];

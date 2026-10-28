@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/constants/query-keys';
 import { useSyncSession } from '@/features/auth';
 
-import { banksApi, onboardingApi } from '../api/onboarding.api';
+import { onboardingApi } from '../api/onboarding.api';
 
 export const useOnboarding = (options = {}) =>
   useQuery({ queryKey: queryKeys.vendorMe.onboarding, queryFn: onboardingApi.get, ...options });
@@ -50,16 +50,3 @@ export const useRemoveDocument = () =>
   useDocumentMutation(onboardingApi.removeDocument, (docs, _result, id) =>
     docs.filter((d) => d.id !== id),
   );
-
-export const useBanks = () =>
-  useQuery({ queryKey: queryKeys.banks.all, queryFn: banksApi.list, staleTime: Infinity });
-
-/** Looks up the account name once a bank and a 10-digit number are entered. */
-export const useResolveAccount = ({ bankCode, accountNumber }) =>
-  useQuery({
-    queryKey: queryKeys.banks.resolve({ bankCode, accountNumber }),
-    queryFn: () => banksApi.resolve({ bankCode, accountNumber }),
-    enabled: Boolean(bankCode) && /^\d{10}$/.test(accountNumber ?? ''),
-    staleTime: Infinity,
-    retry: false,
-  });

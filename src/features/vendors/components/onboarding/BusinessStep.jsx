@@ -1,6 +1,12 @@
-import { Form, FormInput, FormTextarea, ImageUpload, PhoneInput } from '@/components/forms';
+import {
+  Form,
+  FormInput,
+  FormTextarea,
+  ImageUpload,
+  PhoneInput,
+  StepCard,
+} from '@/components/forms';
 
-import { StepCard } from './StepCard';
 import { useSaveOnboardingStep } from '../../hooks/useOnboarding';
 import { businessSchema } from '../../schemas/onboarding.schemas';
 

@@ -2,8 +2,7 @@ import { Timer } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/cn';
-
-import { formatCountdown, secondsLeft } from '../../lib/countdown';
+import { formatCountdown, secondsLeft } from '@/lib/countdown';
 
 /** Time left to accept before the order is auto-rejected (BR-PAY-04). Calls `onExpire` once. */
 export function AcceptCountdown({ deadline, onExpire, className }) {
