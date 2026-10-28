@@ -40,7 +40,7 @@ export default function TokensPage() {
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:px-6">
       <header className="flex items-center gap-3">
-        <img src="/logo-mark.svg" alt="" width="40" height="40" />
+        <img src="/logo.webp" alt="" width="40" height="40" />
         <h1 className="text-2xl font-semibold">KJT Foodie design tokens</h1>
       </header>
 

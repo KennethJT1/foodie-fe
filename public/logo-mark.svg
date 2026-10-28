@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="KJT Foodie">
-  <path d="M32 2C18.7 2 8 12.5 8 25.6 8 43 32 62 32 62s24-19 24-36.4C56 12.5 45.3 2 32 2z" fill="#E85D04"/>
-  <circle cx="32" cy="25" r="14" fill="#FFF8F0"/>
-  <circle cx="32" cy="25" r="9" fill="none" stroke="#FFB703" stroke-width="2.5"/>
-  <path d="M22 17v6a2 2 0 0 0 4 0v-6M24 23v11" stroke="#1B7F3B" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-  <path d="M41 17c-1.8 0-3 2-3 4.5S39.2 26 41 26v8" stroke="#1B7F3B" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-</svg>

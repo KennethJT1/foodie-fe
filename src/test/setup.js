@@ -6,17 +6,30 @@ import { registerMockSocket } from '@/lib/socket';
 import { isDbDirty, resetDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
 import { createMockSocket } from '@/mocks/socket';
+import { useAuthStore } from '@/stores/auth-store';
 
 registerMockSocket(createMockSocket);
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
+  useAuthStore.setState({ user: null, accessToken: null, status: 'idle' });
   server.resetHandlers();
   if (isDbDirty()) resetDb();
   window.localStorage.clear();
 });
 afterAll(() => server.close());
+
+// React Router data routers build fetch Requests with jsdom's AbortSignal, which Node's
+// Request rejects. Tests don't abort navigations, so drop the signal.
+const NodeRequest = globalThis.Request;
+globalThis.Request = class extends NodeRequest {
+  constructor(input, init = {}) {
+    // eslint-disable-next-line no-unused-vars
+    const { signal, ...rest } = init;
+    super(input, rest);
+  }
+};
 
 // jsdom gaps used by components
 if (!window.matchMedia) {

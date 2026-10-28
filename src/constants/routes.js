@@ -13,6 +13,7 @@ export const ROUTES = {
 
   account: {
     root: '/account',
+    payments: '/account/payments',
     cart: '/account/cart',
     checkout: '/account/checkout',
     orders: '/account/orders',
@@ -56,6 +57,7 @@ export const ROUTES = {
     trips: '/rider/trips',
     earnings: '/rider/earnings',
     profile: '/rider/profile',
+    notifications: '/rider/notifications',
     support: '/rider/support',
   },
 
