@@ -15,7 +15,7 @@ export const buttonVariants = cva(
         primary: 'bg-primary text-ink hover:bg-primary-600',
         // Navy pill, e.g. "Log in / Sign up"
         dark: 'bg-ink text-white hover:bg-ink/90',
-        // Green basket / checkout actions
+        // Green cart / checkout actions
         secondary: 'bg-secondary text-white hover:bg-secondary-600',
         outline: 'border border-surface-border bg-surface text-ink hover:border-ink',
         ghost: 'text-ink hover:bg-surface-muted',

@@ -9,7 +9,7 @@ import { formatNaira } from '@/lib/format';
 
 /**
  * Menu card from the UI kit: text on the left, photo on the right with a round "+" button.
- * "+" adds straight to the basket when the dish has no required choices; otherwise it opens
+ * "+" adds straight to the cart when the dish has no required choices; otherwise it opens
  * the dish so the customer can pick.
  */
 export function MenuItemCard({ item, vendor }) {

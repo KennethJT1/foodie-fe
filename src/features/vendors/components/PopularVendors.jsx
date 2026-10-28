@@ -31,6 +31,7 @@ export function PopularVendors() {
                   <span className="flex flex-1 items-center justify-center bg-surface-muted p-3">
                     {v.logo ? (
                       <img
+                        loading="lazy"
                         src={v.logo}
                         alt=""
                         className="h-16 w-16 rounded-xl object-cover transition-transform group-hover:scale-105"

@@ -23,6 +23,7 @@ const options = {
   deliverySteps: 10,
   newOrderMs: isTest ? 0 : 60000,
   offerDelayMs: isTest ? 0 : 4000,
+  chatReplyMs: isTest ? 0 : 3000,
 };
 const running = new Map(); // orderId -> { timer, subscribers, route, index }
 const vendorWatchers = new Map(); // vendorId -> { count, timer }
@@ -507,3 +508,41 @@ export const publicDelivery = (d) => ({
   dropoff: d.dropoff,
   route: d.route,
 });
+
+const CUSTOMER_REPLIES = [
+  "Okay, thank you. I'm at home.",
+  'Please call when you get to the gate.',
+  'No wahala, I will come out.',
+];
+const RIDER_REPLIES = [
+  "I'm on my way.",
+  'I will call you when I get there.',
+  'Traffic is a bit slow, I will be there soon.',
+];
+
+/** Demo: the other side answers a chat message, unless a real rider is using the app. */
+export function scheduleChatReply(order, message) {
+  if (!options.chatReplyMs) return;
+  const fromCustomer = message.senderRole === 'customer';
+  if (fromCustomer && riderWatchers.has(order.riderId)) return;
+  setTimeout(() => {
+    const live = findById('orders', order.id);
+    if (!live || ![ORDER_STATUS.RIDER_ASSIGNED, ORDER_STATUS.PICKED_UP].includes(live.status))
+      return;
+    const rider = findById('riders', live.riderId);
+    const customer = findById('users', live.customerId);
+    const pool = fromCustomer ? RIDER_REPLIES : CUSTOMER_REPLIES;
+    const reply = {
+      id: newId('chm'),
+      orderId: live.id,
+      senderId: fromCustomer ? rider?.userId : customer?.id,
+      senderRole: fromCustomer ? 'rider' : 'customer',
+      senderName: fromCustomer ? rider?.name : customer?.firstName,
+      body: pool[Math.floor(Math.random() * pool.length)],
+      createdAt: new Date().toISOString(),
+    };
+    db.chatMessages.push(reply);
+    persist();
+    serverEmit('chat:message', reply);
+  }, options.chatReplyMs);
+}

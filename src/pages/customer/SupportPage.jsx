@@ -1,5 +1,9 @@
-import { ComingSoon } from '@/pages/ComingSoon';
+import { MySupport } from '@/features/support';
 
 export default function SupportPage() {
-  return <ComingSoon title="Help and support" phase={17} />;
+  return (
+    <div className="px-4 py-6 md:px-6">
+      <MySupport />
+    </div>
+  );
 }

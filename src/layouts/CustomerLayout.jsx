@@ -107,7 +107,7 @@ export default function CustomerLayout() {
         <Outlet />
       </main>
       <CustomerFooter />
-      <BottomTabs tabs={customerTabs} />
+      <BottomTabs tabs={customerTabs} label="Shortcuts" />
       <CartDrawer />
     </div>
   );

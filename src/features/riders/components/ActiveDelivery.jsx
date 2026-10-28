@@ -8,6 +8,7 @@ import { MapView } from '@/components/maps';
 import { Button, Card } from '@/components/ui';
 import { ORDER_STATUS } from '@/constants/order-status';
 import { ROUTES } from '@/constants/routes';
+import { DeliveryChat } from '@/features/tracking';
 import { cn } from '@/lib/cn';
 import { formatDistance, formatNaira, formatOrderNumber } from '@/lib/format';
 
@@ -235,6 +236,7 @@ export function ActiveDelivery() {
           </Button>
         )}
       </Card>
+      <DeliveryChat order={{ id: delivery.orderId, status: delivery.status }} viewerRole="rider" />
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { useUiStore } from '@/stores/ui-store';
 
 /**
  * Slim bar above the header (UI kit): tagline, delivery location and the green cart button.
- * Desktop only; phones get the basket in the header.
+ * Desktop only; phones get the cart in the header.
  */
 export function CustomerTopBar() {
   const user = useAuthStore((s) => s.user);

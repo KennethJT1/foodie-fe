@@ -82,6 +82,7 @@ export function HomeFeed() {
           <InfiniteList
             query={query}
             className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            virtual={{ columns: { sm: 2, lg: 3 }, estimateRowHeight: 520 }}
             renderItem={(item) => <FoodPost item={item} />}
             loadingFallback={
               <div

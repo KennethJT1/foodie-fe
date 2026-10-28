@@ -53,6 +53,18 @@ open, a demo order arrives about once a minute so the live queue has something t
 | `npm run format`     | Format everything with Prettier     |
 | `npm test`           | Run Vitest unit and component tests |
 | `npm run test:watch` | Vitest in watch mode                |
+| `npm run test:e2e`   | Playwright journeys on the mock API |
+
+The Playwright journeys (`tests/e2e/`) start their own dev server on port 5174 with mocks on.
+Install the browser once with `npx playwright install chromium`. They cover: a customer orders
+and tracks a delivery, a vendor accepts and marks ready, a rider delivers with the code on a
+360 px phone, an admin approves a vendor, and every role's main screens fit a 360 px phone.
+
+## Offline and install (PWA)
+
+The production build includes a service worker (offline app shell, cached assets, an
+"update ready" prompt and an "add to home screen" offer). With `VITE_USE_MOCKS=true` the MSW
+worker owns the same scope, so the app's own worker is only registered when mocks are off.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org) (`feat(orders): add accept button`); Husky runs lint-staged and commitlint on every commit.
 

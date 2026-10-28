@@ -27,7 +27,14 @@ export function CustomerFooter() {
     <footer className="mt-12 bg-surface-muted">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 md:px-6">
         <div className="space-y-3">
-          <img src="/logo.webp" alt="KJT Foodie" width="80" height="80" className="h-20 w-20" />
+          <img
+            loading="lazy"
+            src="/logo.webp"
+            alt="KJT Foodie"
+            width="80"
+            height="80"
+            className="h-20 w-20"
+          />
           <p className="max-w-xs text-sm text-ink-muted">
             Good food, delivered fast. Order from restaurants and home cooks across Nigeria, and
             track your rider live.

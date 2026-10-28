@@ -9,6 +9,12 @@ import { env } from '@/lib/env';
 const DevRoleSwitcher =
   env.isDev && env.useMocks ? lazy(() => import('./dev/DevRoleSwitcher')) : null;
 
+// The MSW worker owns the scope on mocks, so the app's own worker only runs without them
+const AppUpdates =
+  !env.isDev && !env.useMocks && typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+    ? lazy(() => import('./pwa/AppUpdates'))
+    : null;
+
 export function RootLayout() {
   useSessionBootstrap();
   return (
@@ -23,6 +29,11 @@ export function RootLayout() {
       <Outlet />
       <ScrollRestoration />
       <MockPaystackSheet />
+      {AppUpdates && (
+        <Suspense fallback={null}>
+          <AppUpdates />
+        </Suspense>
+      )}
       {DevRoleSwitcher && (
         <Suspense fallback={null}>
           <DevRoleSwitcher />

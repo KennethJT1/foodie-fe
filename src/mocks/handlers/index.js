@@ -16,6 +16,7 @@ import { reviewHandlers } from './reviews';
 import { riderHandlers } from './riders';
 import { socialHandlers } from './social';
 import { subscriptionHandlers } from './subscriptions';
+import { supportHandlers } from './support';
 import { vendorOrderHandlers } from './vendor-orders';
 import { vendorStoreHandlers } from './vendor-store';
 
@@ -40,5 +41,6 @@ export const handlers = [
   ...riderHandlers,
   ...adminHandlers,
   ...adminOpsHandlers,
+  ...supportHandlers,
   ...devHandlers,
 ];
