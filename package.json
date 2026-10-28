@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:e2e": "playwright test"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -59,6 +60,7 @@
     "@testing-library/user-event": "^14.6.8",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.6.2",
+    "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",

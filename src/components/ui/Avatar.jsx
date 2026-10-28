@@ -35,6 +35,7 @@ export function Avatar({ src, name, size, shape, className }) {
     <span className={cn(avatarVariants({ size, shape }), className)}>
       {src && !failed ? (
         <img
+          loading="lazy"
           src={src}
           alt={name ?? ''}
           className="h-full w-full object-cover"

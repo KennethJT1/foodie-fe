@@ -18,10 +18,9 @@ import { vendorNav } from '@/layouts/nav/vendor';
 import PublicLayout from '@/layouts/PublicLayout';
 import { env } from '@/lib/env';
 
-import { RiderBanner } from './RiderBanner';
+import { RiderBannerSlot, VendorBannerSlot } from './RoleBanners';
 import { RootLayout } from './RootLayout';
 import { RouteError } from './RouteError';
-import { VendorBanner } from './VendorBanner';
 
 /** Lazy route: each page is its own chunk, so customers never download admin code. */
 const page = (load) => ({ lazy: () => load().then((m) => ({ Component: m.default })) });
@@ -118,7 +117,7 @@ export const routes = [
                 home="/vendor"
                 notificationsTo="/vendor/notifications"
                 profileTo="/vendor/settings"
-                banner={VendorBanner}
+                banner={VendorBannerSlot}
               />
             </RequireRole>
           </RequireAuth>
@@ -181,7 +180,7 @@ export const routes = [
                 home="/rider"
                 notificationsTo="/rider/notifications"
                 profileTo="/rider/profile"
-                banner={RiderBanner}
+                banner={RiderBannerSlot}
               />
             </RequireRole>
           </RequireAuth>

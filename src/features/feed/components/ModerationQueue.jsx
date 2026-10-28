@@ -37,7 +37,14 @@ function Target({ report }) {
     );
   return (
     <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm">
-      {t.photo && <img src={t.photo} alt={t.name} className="h-14 w-14 rounded-lg object-cover" />}
+      {t.photo && (
+        <img
+          loading="lazy"
+          src={t.photo}
+          alt={t.name}
+          className="h-14 w-14 rounded-lg object-cover"
+        />
+      )}
       <div>
         <Link
           to={ROUTES.food(t.foodItemId)}

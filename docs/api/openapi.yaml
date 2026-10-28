@@ -1,7 +1,7 @@
 # KJT Foodie API contract — DRAFT v0.1 (frontend copy).
 # The master copy lives in the backend repo. Any change needs agreement from both teams.
-# Phase 4 covers the shared conventions, auth and catalogue; later phases add every endpoint
-# the mock handlers implement (src/mocks/handlers/).
+# Covers every endpoint the mock handlers implement (src/mocks/handlers/) as of phase 17,
+# ready to hand to the backend team.
 openapi: 3.1.0
 info:
   title: KJT Foodie API
@@ -52,6 +52,10 @@ tags:
       Admin dashboard. Each endpoint needs the named permission (`x-permission`); the server
       re-checks it. Live map: the client emits `admin:live-map:subscribe` / `:unsubscribe`; the
       server pushes a LiveMap snapshot as `admin:live-map` every few seconds.
+  - name: Support
+    description: |
+      Help tickets for customers, vendors and riders, and customer–rider chat during a delivery.
+      Chat in real time: the server emits `chat:message` `{ id, orderId, senderRole, senderName, body, createdAt }`.
   - name: Notifications
     description: |
       In-app list over REST. Real time over Socket.IO: the client emits `order:subscribe` /
@@ -2291,6 +2295,86 @@ paths:
         - { name: to, in: query, schema: { type: string, format: date } }
       responses:
         '200': { description: 'Page of { id, actorName, actorRole, action, targetType, targetId, summary, ip, createdAt }' }
+
+  /support/tickets:
+    get:
+      tags: [Support]
+      summary: The signed-in user's tickets (internal notes are never returned)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/search'
+        - { name: status, in: query, schema: { type: string, enum: [open, pending, resolved, closed] } }
+      responses:
+        '200': { description: 'Page of { id, number, subject, status, orderCode, lastMessage, hasReply, updatedAt }' }
+    post:
+      tags: [Support]
+      summary: Open a ticket, optionally about one of the user's orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body]
+              properties:
+                subject: { type: string, maxLength: 120 }
+                body: { type: string, maxLength: 2000 }
+                orderId: { type: string }
+      responses:
+        '201': { description: Ticket }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /support/tickets/{id}:
+    get:
+      tags: [Support]
+      summary: One of the user's tickets with the conversation
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Ticket }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /support/tickets/{id}/messages:
+    post:
+      tags: [Support]
+      summary: Reply on a ticket; a waiting or resolved ticket opens again
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [body], properties: { body: { type: string, maxLength: 2000 } } }
+      responses:
+        '200': { description: Ticket }
+        '409': { description: The ticket is closed }
+
+  /support/tickets/{id}/resolve:
+    post:
+      tags: [Support]
+      summary: The user says their problem is solved
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Ticket (resolved) }
+
+  /orders/{id}/chat:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Support]
+      summary: Customer–rider chat for an order (the customer and the assigned rider only)
+      responses:
+        '200': { description: '{ isOpen, messages: [{ id, senderRole, senderName, body, createdAt }] }' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Support]
+      summary: Send a chat message while the order is rider_assigned or picked_up
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [body], properties: { body: { type: string, maxLength: 500 } } }
+      responses:
+        '201': { description: Message (also pushed as chat:message) }
+        '409': { description: Chat is closed for this order }
 
 components:
   securitySchemes:
