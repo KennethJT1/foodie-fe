@@ -1,8 +1,515 @@
-# Placeholder. Endpoints for auth and catalogue are drafted with the backend lead in phase 4.
+# KJT Foodie API contract — DRAFT v0.1 (frontend copy).
+# The master copy lives in the backend repo. Any change needs agreement from both teams.
+# Phase 4 covers the shared conventions, auth and catalogue; later phases add every endpoint
+# the mock handlers implement (src/mocks/handlers/).
 openapi: 3.1.0
 info:
   title: KJT Foodie API
-  version: 0.0.1
+  version: 0.1.0
+  description: |
+    Conventions
+    - Base path `/api/v1`. JSON only. Money is always an integer in **kobo**.
+    - Success envelope `{ success: true, data, meta? }`; error envelope `{ success: false, error }`.
+    - Lists: `page`, `limit` (max 100), `sort` (`-field` = descending, comma for several),
+      `search`, per-field filters (comma = any of, e.g. `status=paid,accepted`), `from` / `to` dates.
+    - Feeds and comments use cursor pagination: `cursor`, `limit` → `meta.nextCursor`.
+    - Access token in `Authorization: Bearer`; refresh token in an httpOnly cookie.
+    - Times are ISO 8601 UTC; the UI shows Africa/Lagos.
 servers:
   - url: /api/v1
-paths: {}
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: System
+  - name: Auth
+  - name: Catalogue
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      security: []
+      summary: Liveness check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: ok }
+                          time: { type: string, format: date-time }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Sign up as a customer, vendor or rider (admins are created by a super admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, firstName, lastName, phone, password]
+              properties:
+                role: { type: string, enum: [customer, vendor, rider] }
+                firstName: { type: string }
+                lastName: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string, example: '+2348031234567' }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201':
+          description: Account created; an OTP is sent to the phone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          otpRequestId: { type: string }
+                          phone: { type: string }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Log in with email + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/otp/request:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Send a login OTP by SMS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { type: string }
+                purpose: { type: string, enum: [login, verify, reset] }
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          otpRequestId: { type: string }
+                          expiresInSec: { type: integer, example: 300 }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Verify an OTP and start a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone: { type: string }
+                code: { type: string, pattern: '^\d{6}$' }
+                purpose: { type: string, enum: [login, verify, reset] }
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Rotate the refresh cookie and get a new access token
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: End the session and clear the refresh cookie
+      responses:
+        '204': { description: Logged out }
+
+  /auth/password/forgot:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Send a reset code to the phone or email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identifier: { type: string, description: Email or phone }
+      responses:
+        '200': { description: Always succeeds (no account enumeration) }
+
+  /auth/password/reset:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Set a new password with the reset code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, code, password]
+              properties:
+                identifier: { type: string }
+                code: { type: string }
+                password: { type: string, minLength: 8 }
+      responses:
+        '200': { description: Password changed }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /me:
+    get:
+      tags: [Auth]
+      summary: The signed-in user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      tags: [Auth]
+      summary: Edit profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                email: { type: string }
+      responses:
+        '200': { description: Updated user }
+
+  /categories:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: Food categories
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Category' }
+
+  /feed:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: Home feed of food posts near a point (cursor pagination)
+      parameters:
+        - { name: lat, in: query, schema: { type: number } }
+        - { name: lng, in: query, schema: { type: number } }
+        - { name: tab, in: query, schema: { type: string, enum: [nearby, popular, newest, following] } }
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/FoodItem' } }
+                  meta: { $ref: '#/components/schemas/CursorMeta' }
+
+  /food-items:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: Search food items
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - { name: categoryId, in: query, schema: { type: string } }
+        - { name: vendorId, in: query, schema: { type: string } }
+        - { name: minPrice, in: query, description: kobo, schema: { type: integer } }
+        - { name: maxPrice, in: query, description: kobo, schema: { type: integer } }
+        - { name: maxDistanceKm, in: query, schema: { type: number } }
+        - { name: minRating, in: query, schema: { type: number } }
+        - { name: lat, in: query, schema: { type: number } }
+        - { name: lng, in: query, schema: { type: number } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListSuccess'
+                  - properties:
+                      data: { type: array, items: { $ref: '#/components/schemas/FoodItem' } }
+
+  /food-items/{id}:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: One food item with its vendor
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data: { $ref: '#/components/schemas/FoodItem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /vendors/{slug}:
+    get:
+      tags: [Catalogue]
+      security: []
+      summary: Vendor storefront (hidden when the subscription has lapsed, BR-SUB-06)
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Vendor with opening hours and isOpen }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    sort: { name: sort, in: query, schema: { type: string, example: '-createdAt' } }
+    search: { name: search, in: query, schema: { type: string } }
+    cursor: { name: cursor, in: query, schema: { type: string } }
+
+  schemas:
+    Success:
+      type: object
+      required: [success, data]
+      properties:
+        success: { type: boolean, const: true }
+        data: {}
+
+    ListSuccess:
+      type: object
+      required: [success, data, meta]
+      properties:
+        success: { type: boolean, const: true }
+        data: { type: array, items: {} }
+        meta: { $ref: '#/components/schemas/PageMeta' }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+        hasNextPage: { type: boolean }
+        hasPrevPage: { type: boolean }
+
+    CursorMeta:
+      type: object
+      properties:
+        nextCursor: { type: [string, 'null'] }
+        limit: { type: integer }
+
+    Error:
+      type: object
+      required: [success, error]
+      properties:
+        success: { type: boolean, const: false }
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: VALIDATION_ERROR }
+            message: { type: string, example: Please check the highlighted fields. }
+            fieldErrors:
+              type: object
+              additionalProperties: { type: string }
+              example: { email: Enter a valid email address }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [customer, vendor, rider, admin] }
+        adminRole: { type: string, enum: [super_admin, support, finance, dispatch, onboarding] }
+        permissions: { type: array, items: { type: string } }
+        firstName: { type: string }
+        lastName: { type: string }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        avatar: { type: [string, 'null'] }
+        status: { type: string, enum: [active, suspended, banned] }
+        vendor:
+          type: object
+          description: Present for vendor accounts
+          properties:
+            id: { type: string }
+            slug: { type: string }
+            approvalStatus: { type: string, enum: [draft, pending, approved, rejected, suspended] }
+            subscriptionStatus: { type: string, enum: [none, trial, active, grace, expired, cancelled] }
+        rider:
+          type: object
+          description: Present for rider accounts
+          properties:
+            id: { type: string }
+            approvalStatus: { type: string }
+            isOnline: { type: boolean }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        icon: { type: string }
+        itemCount: { type: integer }
+
+    FoodItem:
+      type: object
+      properties:
+        id: { type: string }
+        vendorId: { type: string }
+        categoryId: { type: string }
+        name: { type: string }
+        description: { type: string, maxLength: 500 }
+        price: { type: integer, description: kobo }
+        photos: { type: array, items: { type: string, format: uri } }
+        portion: { type: string }
+        prepTimeMins: { type: integer }
+        isAvailable: { type: boolean }
+        availableDays: { type: array, items: { type: integer, minimum: 0, maximum: 6 } }
+        optionGroups:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              required: { type: boolean }
+              max: { type: integer }
+              options:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    price: { type: integer, description: kobo }
+        likesCount: { type: integer }
+        commentsCount: { type: integer }
+        isLiked: { type: boolean, description: For the signed-in user }
+        distanceM: { type: integer }
+        vendor:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            slug: { type: string }
+            logo: { type: string }
+            rating: { type: number }
+            isOpen: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+  responses:
+    Session:
+      description: Signed in
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Success'
+              - properties:
+                  data:
+                    type: object
+                    properties:
+                      accessToken: { type: string }
+                      user: { $ref: '#/components/schemas/User' }
+    Unauthenticated:
+      description: Not signed in or token expired
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Not found
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: Already exists
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    RateLimited:
+      description: Too many requests
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ValidationError:
+      description: Field errors
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
