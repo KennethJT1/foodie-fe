@@ -87,3 +87,4 @@ Read in this order:
 3. [Frontend Build Plan](docs/03-frontend-build-plan.md)
 4. [Implementation Plan](docs/04-implementation-plan.md)
 5. [API contract](docs/api/openapi.yaml) (copy; the master lives in the backend repo)
+6. [Backend handoff](docs/05-backend-handoff.md): endpoints, filters, real-time events, rules and the seeder spec (with [real seed photos](docs/backend/seed-images.json))
