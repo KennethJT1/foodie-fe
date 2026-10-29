@@ -24,6 +24,8 @@ security:
 tags:
   - name: System
   - name: Auth
+  - name: Uploads
+    description: Files (photos, documents) are uploaded first; other endpoints receive the returned URL.
   - name: Catalogue
   - name: Social
   - name: Account
@@ -190,6 +192,64 @@ paths:
         '200': { $ref: '#/components/responses/Session' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /auth/google:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Sign in or sign up (as a customer) with a Google ID token (FR-ACC-05)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential]
+              properties:
+                credential: { type: string, description: ID token from Google Identity Services }
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '401': { description: The Google token is invalid or expired }
+        '403': { description: Account banned or suspended }
+
+  /uploads:
+    post:
+      tags: [Uploads]
+      summary: Upload one image or document; returns the URL to send to other endpoints
+      description: |
+        Images are re-encoded to WebP (food photos max 1600 px wide, under 2 MB after compression).
+        `purpose` decides who may upload and where it is stored. Documents are private: their URLs
+        are signed and short-lived, and only the owner and admins can read them.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, purpose]
+              properties:
+                file: { type: string, format: binary }
+                purpose:
+                  type: string
+                  enum: [food_photo, vendor_logo, vendor_cover, vendor_document, rider_document, refund_photo, avatar]
+      responses:
+        '201':
+          description: Stored file
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          url: { type: string }
+                          width: { type: integer }
+                          height: { type: integer }
+                          bytes: { type: integer }
+        '413': { description: File too large (max 8 MB before compression) }
+        '422': { description: 'Not a JPG, PNG, WebP or PDF (documents only)' }
+
   /auth/refresh:
     post:
       tags: [Auth]
@@ -269,6 +329,12 @@ paths:
                 email: { type: string }
       responses:
         '200': { description: Updated user }
+    delete:
+      tags: [Auth]
+      summary: Customer deletes their account (personal data removed, orders kept anonymised)
+      responses:
+        '204': { description: Deleted; the refresh cookie is cleared }
+        '403': { description: Only customers can delete their own account here }
 
   /categories:
     get:
