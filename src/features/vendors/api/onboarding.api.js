@@ -1,0 +1,10 @@
+import { api, unwrap } from '@/lib/api-client';
+
+export const onboardingApi = {
+  get: () => api.get('/vendor/onboarding').then(unwrap),
+  /** Saves one wizard step: { step, ...fields }. */
+  saveStep: (body) => api.patch('/vendor/onboarding', body).then(unwrap),
+  submit: () => api.post('/vendor/onboarding/submit').then(unwrap),
+  uploadDocument: (body) => api.post('/vendor/documents', body).then(unwrap),
+  removeDocument: (id) => api.delete(`/vendor/documents/${id}`),
+};

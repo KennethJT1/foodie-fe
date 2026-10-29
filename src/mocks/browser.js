@@ -1,0 +1,30 @@
+import { setupWorker } from 'msw/browser';
+
+import { registerMockSocket } from '@/lib/socket';
+
+import { db, resetDb } from './db';
+import { handlers } from './handlers';
+import { configureOrderSimulation, registerRealtime } from './realtime';
+import { createMockSocket } from './socket';
+
+export const worker = setupWorker(...handlers);
+
+/** Starts the mock API. Only called when VITE_USE_MOCKS=true. */
+export async function startMocks() {
+  registerMockSocket(createMockSocket);
+  registerRealtime();
+  window.__kjtMocks = {
+    resetDb: () => (resetDb(), window.location.reload()),
+    // For the Playwright journeys: speed up the fake real time and peek at the mock data
+    configureSimulation: configureOrderSimulation,
+    deliveryCode: (orderIdOrCode) =>
+      db.orders.find((o) => o.id === orderIdOrCode || o.code === orderIdOrCode)?.deliveryCode ??
+      null,
+  };
+  await worker.start({
+    onUnhandledRequest: ({ url }, print) => {
+      if (new URL(url).pathname.startsWith('/api/')) print.warning();
+    },
+    quiet: true,
+  });
+}
