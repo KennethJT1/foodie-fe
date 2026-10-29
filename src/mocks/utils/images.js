@@ -1,48 +1,51 @@
-/** Small inline SVG placeholders so the mock app needs no image hosting. */
+/**
+ * Real photographs for the mock app (Wikimedia Commons, listed in docs/backend/seed-images.json).
+ * Helpers return URLs; `photoCredit(url)` gives the attribution.
+ */
+import SEED_IMAGES from '../../../docs/backend/seed-images.json';
 
-const PALETTES = [
-  ['#FFE0CC', '#E85D04'],
-  ['#EAF6EE', '#1B7F3B'],
-  ['#FFF8E1', '#FFB703'],
-  ['#FFF3EB', '#A34002'],
-  ['#EFF6FF', '#2563EB'],
-];
+const CREDITS = new Map(
+  [
+    ...Object.values(SEED_IMAGES.dishes).flat(),
+    ...SEED_IMAGES.vendorCovers,
+    ...SEED_IMAGES.documentSample,
+  ].map((p) => [p.url, p.credit]),
+);
 
-const svgUri = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+const DISH_NAMES = Object.keys(SEED_IMAGES.dishes);
 
-/** 4:3 food photo with a large emoji. */
-export function foodPhoto(emoji, variant = 0) {
-  const [bg, fg] = PALETTES[variant % PALETTES.length];
-  return svgUri(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${bg}"/><circle cx="200" cy="150" r="${95 + (variant % 3) * 8}" fill="${fg}" opacity=".15"/><text x="200" y="150" font-size="120" text-anchor="middle" dominant-baseline="central">${emoji}</text></svg>`,
+const pick = (list, variant) => list[variant % list.length].url;
+
+/** Photo of a seeded dish, rotated by `variant`; any dish photo when the name is unknown. */
+export function foodPhoto(dishName, variant = 0) {
+  const photos = SEED_IMAGES.dishes[dishName] ?? Object.values(SEED_IMAGES.dishes).flat();
+  return pick(photos, variant);
+}
+
+/** All photos of a dish starting at `variant`, so vendors selling the same dish differ. */
+export function foodPhotos(dishName, count, variant = 0) {
+  const photos = SEED_IMAGES.dishes[dishName] ?? [];
+  return Array.from({ length: Math.min(count, photos.length) }, (_, i) =>
+    pick(photos, variant + i),
   );
 }
 
-/** Square logo with initials. */
-export function vendorLogo(name, variant = 0) {
-  const [bg, fg] = PALETTES[variant % PALETTES.length];
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  return svgUri(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="24" fill="${fg}"/><text x="60" y="62" font-family="Poppins,sans-serif" font-weight="700" font-size="44" fill="${bg}" text-anchor="middle" dominant-baseline="central">${initials}</text></svg>`,
-  );
+/** Wide cover: a real Nigerian food stall, suya spot or kitchen. */
+export function vendorCover(variant = 0) {
+  return pick(SEED_IMAGES.vendorCovers, variant);
 }
 
-/** Wide cover image. */
-export function vendorCover(emoji, variant = 0) {
-  const [bg, fg] = PALETTES[variant % PALETTES.length];
-  return svgUri(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><rect width="1200" height="400" fill="${bg}"/><path d="M0 300 Q300 220 600 300 T1200 280 V400 H0Z" fill="${fg}" opacity=".18"/><text x="980" y="190" font-size="170" text-anchor="middle" dominant-baseline="central">${emoji}</text></svg>`,
-  );
+/** Square logo: a real photo (rendered with object-cover, so it crops to the centre). */
+export function vendorLogo(variant = 0) {
+  return foodPhoto(DISH_NAMES[variant % DISH_NAMES.length], 0);
 }
 
-/** A grey "document" thumbnail for uploaded files. */
-export function documentImage(label) {
-  return svgUri(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><rect width="300" height="400" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="4"/><rect x="40" y="60" width="220" height="16" fill="#D1D5DB"/><rect x="40" y="100" width="180" height="12" fill="#E5E7EB"/><rect x="40" y="130" width="200" height="12" fill="#E5E7EB"/><rect x="40" y="160" width="160" height="12" fill="#E5E7EB"/><text x="150" y="330" font-family="Inter,sans-serif" font-size="20" fill="#6B7280" text-anchor="middle">${label}</text></svg>`,
-  );
+/** Sample paperwork photo used for every uploaded document. */
+export function documentImage() {
+  return SEED_IMAGES.documentSample[0].url;
+}
+
+/** `{ author, license, source }` for a photo URL, or null for uploads. */
+export function photoCredit(url) {
+  return CREDITS.get(url) ?? null;
 }

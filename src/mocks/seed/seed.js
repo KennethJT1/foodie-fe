@@ -15,7 +15,14 @@ import {
   VENDOR_NAME_PARTS,
 } from './catalogue-data';
 import { distanceMetres } from '../utils/geo';
-import { documentImage, foodPhoto, vendorCover, vendorLogo } from '../utils/images';
+import {
+  documentImage,
+  foodPhoto,
+  foodPhotos,
+  photoCredit,
+  vendorCover,
+  vendorLogo,
+} from '../utils/images';
 import { DEFAULT_SETTINGS, deliveryFeeFor, processingFeeFor } from '../utils/settings-defaults';
 
 /** Every demo account uses this password and OTP (test values, mock mode only). */
@@ -311,8 +318,8 @@ export function buildSeed(seed = 2026) {
         'Fast, tasty and affordable — lunch sorted.',
         'Party trays, office lunches and weekend specials.',
       ]),
-      logo: vendorLogo(vName, variant),
-      cover: vendorCover(faker.helpers.arrayElement(['🍛', '🍢', '🍲', '🥘', '🍗']), variant),
+      logo: vendorLogo(variant),
+      cover: vendorCover(variant),
       phone: nigerianPhone(),
       email: owner.email,
       address: {
@@ -344,7 +351,7 @@ export function buildSeed(seed = 2026) {
         id: newId('doc'),
         type: d.type,
         label: d.label,
-        url: documentImage(d.label.split(' (')[0]),
+        url: documentImage(),
         uploadedAt: createdAt.toISOString(),
       })),
       onboardingStep: 'submitted',
@@ -578,6 +585,7 @@ export function buildSeed(seed = 2026) {
         faker.number.int({ min: 1, max: 3 }),
       );
       const createdAt = faker.date.between({ from: v.approvedAt ?? v.createdAt, to: now });
+      const photos = foodPhotos(name, photoCount, variant);
       db.foodItems.push({
         id: newId('food'),
         vendorId: v.id,
@@ -586,7 +594,8 @@ export function buildSeed(seed = 2026) {
         slug: slugify(name),
         description,
         price: kobo(roundTo(faker.number.int({ min, max }), 50)),
-        photos: Array.from({ length: photoCount }, (_, i) => foodPhoto(emoji, variant + i)),
+        photos,
+        photoCredits: photos.map((url) => ({ url, ...photoCredit(url) })),
         emoji,
         portion: faker.helpers.arrayElement([
           '1 plate',
@@ -752,7 +761,7 @@ export function buildSeed(seed = 2026) {
         id: newId('doc'),
         type: d.type,
         label: d.label,
-        url: documentImage(d.label),
+        url: documentImage(),
         uploadedAt: user.createdAt,
       })),
       bank,
@@ -1229,7 +1238,7 @@ export function buildSeed(seed = 2026) {
       ]),
       amount,
       orderSubtotal: order.subtotal,
-      photos: faker.datatype.boolean(0.5) ? [foodPhoto(order.items[0] ? '🍛' : '📦', i)] : [],
+      photos: faker.datatype.boolean(0.5) ? [foodPhoto(order.items[0]?.name, i)] : [],
       status,
       deadline: new Date(
         createdAt.getTime() + db.settings.refundDeadlineHours * 3600000,

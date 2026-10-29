@@ -43,7 +43,11 @@ export function FoodDetail({ id }) {
   return (
     <div className="space-y-8">
       <div className="grid gap-6 md:grid-cols-2">
-        <FoodGallery photos={item.photos} alt={`${item.name} from ${vendor.name}`} />
+        <FoodGallery
+          photos={item.photos}
+          credits={item.photoCredits}
+          alt={`${item.name} from ${vendor.name}`}
+        />
         <div className="space-y-4">
           <div className="space-y-1">
             {item.categoryName && <p className="text-sm text-ink-muted">{item.categoryName}</p>}
