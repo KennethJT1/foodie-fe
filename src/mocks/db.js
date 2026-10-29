@@ -4,7 +4,7 @@ import { buildSeed } from './seed/seed';
  * In-memory mock database. In the browser it is saved to localStorage so demo data survives
  * reloads; bump DB_VERSION when the seed shape changes. Tests always start from a fresh seed.
  */
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORAGE_KEY = 'kjt-mock-db';
 const canPersist = typeof window !== 'undefined' && import.meta.env.MODE !== 'test';
 

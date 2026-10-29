@@ -53,7 +53,7 @@ describe('orders API (phase 10)', () => {
     const vendor = await api.get('/orders', { params: { limit: 100 } });
     expect(vendor.data.data.every((o) => o.vendorId === 'ven_mama_put')).toBe(true);
     expect(vendor.data.data[0].deliveryCode).toBeUndefined();
-    expect(vendor.data.data[0].items[0].photo).toMatch(/^data:image/);
+    expect(vendor.data.data[0].items[0].photo).toMatch(/^https:\/\/\S+\.jpe?g$/i);
 
     signIn(ADA);
     const mine = await api.get('/orders', { params: { limit: 100 } });
