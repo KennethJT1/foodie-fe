@@ -2,6 +2,7 @@ import { Search, ShoppingBasket, UserCircle2 } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { Button } from '@/components/ui';
+import { getRoleHome } from '@/constants/roles';
 import { ROUTES } from '@/constants/routes';
 import { CartDrawer } from '@/features/cart';
 import { NotificationBell } from '@/features/notifications';
@@ -10,7 +11,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { selectCartCount, useCartStore } from '@/stores/cart-store';
 import { useUiStore } from '@/stores/ui-store';
 
-import { customerTabs } from './nav/customer';
+import { customerTabs, staffTabs } from './nav/customer';
 import { BottomTabs } from './parts/BottomTabs';
 import { CustomerFooter } from './parts/CustomerFooter';
 import { CustomerTopBar } from './parts/CustomerTopBar';
@@ -24,6 +25,7 @@ export default function CustomerLayout() {
   const cartCount = useCartStore(selectCartCount);
   const openCart = useUiStore((s) => s.openCart);
   const isCustomer = user?.role === 'customer';
+  const isStaff = Boolean(user) && !isCustomer;
 
   const links = [
     { to: ROUTES.home, label: 'Home', end: true },
@@ -34,6 +36,7 @@ export default function CustomerLayout() {
           { to: ROUTES.account.following, label: 'Following' },
         ]
       : []),
+    ...(isStaff ? [{ to: getRoleHome(user), label: 'Dashboard' }] : []),
   ];
 
   return (
@@ -107,7 +110,7 @@ export default function CustomerLayout() {
         <Outlet />
       </main>
       <CustomerFooter />
-      <BottomTabs tabs={customerTabs} label="Shortcuts" />
+      <BottomTabs tabs={isStaff ? staffTabs(getRoleHome(user)) : customerTabs} label="Shortcuts" />
       <CartDrawer />
     </div>
   );
