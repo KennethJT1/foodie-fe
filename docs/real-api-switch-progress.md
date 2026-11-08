@@ -63,10 +63,14 @@ Last updated: 2026-11-08
 
 ## What's left
 
+- [ ] Deployed site (Vercel) on the real API: send the backend team the Vercel domain (they set
+      `CORS_ORIGINS`, `COOKIE_SAME_SITE=none`, `COOKIE_SECURE=true`), then set `VITE_USE_MOCKS=false`,
+      `VITE_API_URL=https://<api host>/api/v1`, `VITE_SOCKET_URL=https://<api host>` in Vercel.
+
 - [ ] Walk the four journeys by hand (doc section 6) and log mismatches below.
 - [ ] Check other mock-vs-real differences on screen: refund `comments` (admin only), order
       `delivery.route` / `refund`, 409 codes (`INVALID_STATUS`, `ALREADY_SUBMITTED`, `OFFER_GONE`).
-- [ ] Commit (not done yet; ask before committing). No `Co-Authored-By: Claude` lines in commits.
+- [x] Committed and pushed to `main` (`e185e36`, 2026-11-08). No `Co-Authored-By: Claude` lines.
 
 ## Git history rewrite (2026-11-08)
 
