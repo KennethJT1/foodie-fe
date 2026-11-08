@@ -118,6 +118,7 @@ function ItemForm({ item, limits }) {
             >
               <ImageUpload
                 name="photos"
+                purpose="food_photo"
                 max={limits.photosPerItem}
                 itemLabel="photo"
                 label="Food photos"

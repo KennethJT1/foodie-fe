@@ -35,7 +35,11 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
-  server: { port: 5173 },
+  // Real-API mode: API calls go through these proxies so they are same-origin and the httpOnly
+  // refresh cookie works without CORS cookie settings. Socket.IO connects straight to
+  // VITE_SOCKET_URL. Mock mode never reaches the proxy (MSW answers first).
+  server: { port: 5173, proxy: { '/api': 'http://localhost:4000' } },
+  preview: { port: 4173, proxy: { '/api': 'http://localhost:4000' } },
   build: {
     // The two chunks over the default 500 kB are never on the first load: the mock API (faker
     // data, mock mode only) and Recharts (dashboards). First-load JS is checked separately.

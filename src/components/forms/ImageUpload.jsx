@@ -4,6 +4,7 @@ import { useId, useRef, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/cn';
 import { compressImage } from '@/lib/image';
+import { uploadFile } from '@/lib/upload';
 
 import { FormField } from './fields';
 
@@ -11,8 +12,9 @@ const defaultUpload = async (file) => (await compressImage(file)).dataUrl;
 
 /**
  * Picks images, checks type and size, compresses to WebP and shows previews.
- * `onUpload(file) => Promise<url>` does the real upload (features pass their API function);
- * the default keeps the compressed image as a data URL.
+ * With `purpose` (e.g. `food_photo`) each file goes to `POST /uploads` and the returned URL is
+ * kept; the API rejects image fields that aren't the user's own upload. `onUpload(file) =>
+ * Promise<url>` replaces that step; with neither, the compressed image stays a data URL (UI demos).
  */
 export function ImageUploadControl({
   label,
@@ -21,7 +23,8 @@ export function ImageUploadControl({
   onChange,
   max = 1,
   maxSizeMb = 2,
-  onUpload = defaultUpload,
+  purpose,
+  onUpload = purpose ? (file) => uploadFile(file, purpose) : defaultUpload,
   accept = 'image/jpeg,image/png,image/webp',
   error: externalError,
   aspect = 'aspect-[4/3]',

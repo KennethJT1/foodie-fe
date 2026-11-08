@@ -1049,6 +1049,7 @@ export function buildSeed(seed = 2026) {
           '',
         ]),
         reply: null,
+        repliedAt: null,
         createdAt: order.updatedAt,
       });
       db.reviews.push({
@@ -1061,6 +1062,7 @@ export function buildSeed(seed = 2026) {
         rating: faker.helpers.arrayElement([5, 5, 4, 4, 3]),
         comment: faker.helpers.arrayElement(['Very polite rider.', 'Fast delivery!', '']),
         reply: null,
+        repliedAt: null,
         createdAt: order.updatedAt,
       });
       order.ratedVendor = true;

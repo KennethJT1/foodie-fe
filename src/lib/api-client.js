@@ -25,6 +25,12 @@ export function registerAuthBridge(bridge) {
   authBridge = { ...authBridge, ...bridge };
 }
 
+/** The current access token (the socket reads it on every (re)connect). */
+export const getAccessToken = () => authBridge.getAccessToken();
+
+/** Ends the session, e.g. when the socket is refused for a banned account. */
+export const endSession = () => authBridge.onSessionExpired();
+
 api.interceptors.request.use((config) => {
   const token = authBridge.getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;

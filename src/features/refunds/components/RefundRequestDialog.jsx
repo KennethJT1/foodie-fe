@@ -62,7 +62,13 @@ export function RefundRequestDialog({ order, open, onClose }) {
           hint={`Up to ${formatNaira(order.subtotal)}, the food subtotal`}
         />
         <FormTextarea name="details" label="Tell us more (optional)" rows={3} maxLength={500} />
-        <ImageUpload name="photos" label="Photos (optional)" max={3} hint="Up to 3 photos" />
+        <ImageUpload
+          name="photos"
+          purpose="refund_photo"
+          label="Photos (optional)"
+          max={3}
+          hint="Up to 3 photos"
+        />
       </Form>
     </Modal>
   );

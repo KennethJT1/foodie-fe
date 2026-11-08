@@ -54,12 +54,14 @@ export function BusinessStep({ data, onNext, onBack }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <ImageUpload
             name="logo"
+            purpose="vendor_logo"
             label="Logo (optional)"
             itemLabel="logo"
             aspect="aspect-square"
           />
           <ImageUpload
             name="cover"
+            purpose="vendor_cover"
             label="Cover photo (optional)"
             itemLabel="cover photo"
             aspect="aspect-video"

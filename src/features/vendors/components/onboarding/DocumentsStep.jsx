@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { toast } from '@/components/feedback';
 import { ImageUploadControl, StepCard } from '@/components/forms';
-import { compressImage } from '@/lib/image';
+import { uploadFile } from '@/lib/upload';
 
 import {
   useRemoveDocument,
@@ -46,8 +46,8 @@ export function DocumentsStep({ data, onNext, onBack }) {
                 value={doc?.url ?? null}
                 error={errors[d.type]}
                 onUpload={async (file) => {
-                  const { dataUrl } = await compressImage(file);
-                  const saved = await upload.mutateAsync({ type: d.type, url: dataUrl });
+                  const url = await uploadFile(file, 'vendor_document');
+                  const saved = await upload.mutateAsync({ type: d.type, url });
                   setErrors((e) => ({ ...e, [d.type]: undefined }));
                   return saved.url;
                 }}

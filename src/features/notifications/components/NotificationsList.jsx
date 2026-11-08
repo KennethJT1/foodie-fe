@@ -1,4 +1,13 @@
-import { Bell, CreditCard, MessageCircle, Package, RotateCcw, Star, Wallet } from 'lucide-react';
+import {
+  Bell,
+  CreditCard,
+  Info,
+  MessageCircle,
+  Package,
+  RotateCcw,
+  Star,
+  Wallet,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Pagination } from '@/components/data';
@@ -14,6 +23,8 @@ import {
   useNotifications,
 } from '../hooks/useNotifications';
 
+// The contract's seven types. Delivery and chat notices arrive as `order`; support and onboarding
+// as `system`. Anything else (older mock data) falls back to the bell.
 const ICONS = {
   order: Package,
   refund: RotateCcw,
@@ -21,6 +32,7 @@ const ICONS = {
   review: Star,
   subscription: CreditCard,
   payout: Wallet,
+  system: Info,
 };
 
 /** In-app notifications for any role. Opening one marks it read and follows its link. */

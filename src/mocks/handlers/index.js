@@ -17,12 +17,14 @@ import { riderHandlers } from './riders';
 import { socialHandlers } from './social';
 import { subscriptionHandlers } from './subscriptions';
 import { supportHandlers } from './support';
+import { uploadHandlers } from './uploads';
 import { vendorOrderHandlers } from './vendor-orders';
 import { vendorStoreHandlers } from './vendor-store';
 
 /** One file per feature; each phase adds its handlers here. */
 export const handlers = [
   ...healthHandlers,
+  ...uploadHandlers,
   ...authHandlers,
   ...categoryHandlers,
   ...catalogueHandlers,

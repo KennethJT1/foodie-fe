@@ -40,7 +40,7 @@ export function VendorReviewInbox({ vendorId }) {
           {r.reply ? (
             <p className="rounded-lg bg-surface-muted p-2 text-sm">
               <span className="font-medium">Your reply: </span>
-              {r.reply.body}
+              {r.reply}
             </p>
           ) : (
             <ReplyForm

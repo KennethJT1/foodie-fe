@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 import { registerMockSocket } from '@/lib/socket';
 import { isDbDirty, resetDb } from '@/mocks/db';
@@ -10,6 +10,14 @@ import { createMockSocket } from '@/mocks/socket';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCartStore } from '@/stores/cart-store';
 import { useUiStore } from '@/stores/ui-store';
+
+// jsdom's XHR sends FormData as text/plain, so multipart never reaches MSW in tests (browsers are
+// fine, and mock mode in the browser goes through the POST /uploads mock handler). Here an upload
+// just keeps the compressed image as a data URL, which is what that handler returns too.
+vi.mock('@/lib/upload', async () => {
+  const { compressImage } = await import('@/lib/image');
+  return { uploadFile: async (file) => (await compressImage(file)).dataUrl };
+});
 
 // Lazy route chunks load cold in the first test of each file; give findBy* room on slow machines
 configure({ asyncUtilTimeout: 5000 });
