@@ -11,5 +11,7 @@ export const authApi = {
   resetPassword: (body) => api.post('/auth/password/reset', body).then(unwrap),
   me: () => api.get('/me').then(unwrap),
   updateMe: (body) => api.patch('/me', body).then(unwrap),
+  requestPhoneChange: (body) => api.post('/me/phone/otp', body).then(unwrap),
+  verifyPhoneChange: (body) => api.post('/me/phone/verify', body).then(unwrap),
   deleteMe: () => api.delete('/me'),
 };

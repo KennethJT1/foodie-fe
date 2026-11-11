@@ -107,6 +107,19 @@ export const useUpdateMe = () => {
   });
 };
 
+export const useRequestPhoneChange = () => useMutation({ mutationFn: authApi.requestPhoneChange });
+
+export const useVerifyPhoneChange = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: authApi.verifyPhoneChange,
+    onSuccess: (user) => {
+      useAuthStore.getState().setUser(user);
+      qc.setQueryData(queryKeys.me, user);
+    },
+  });
+};
+
 export const useDeleteAccount = () => {
   const qc = useQueryClient();
   return useMutation({

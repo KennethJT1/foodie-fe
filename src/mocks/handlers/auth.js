@@ -276,6 +276,30 @@ export const authHandlers = [
     return ok(sessionUser(user));
   }),
 
+  // Change or add a phone number: a code goes to the new number, then it is saved as verified
+  ...['otp', 'verify'].map((step) =>
+    http.post(api(`/me/phone/${step}`), async ({ request }) => {
+      await latency();
+      const { user, error } = requireUser(request);
+      if (error) return error;
+      const { phone, code } = await readJson(request);
+      const p = normalisePhone(phone ?? '');
+      if (!p) return validationError({ phone: 'Enter a valid Nigerian phone number' });
+      if (p === user.phone) return validationError({ phone: 'That is already your phone number.' });
+      if (db.users.some((u) => u.phone === p && u.id !== user.id)) {
+        const message = 'That phone number is already used by another account.';
+        return fail(409, { code: 'CONFLICT', message, fieldErrors: { phone: message } });
+      }
+      if (step === 'otp') return ok({ otpRequestId: newId('otp'), phone: p, expiresInSec: 300 });
+      if (code !== DEMO_OTP)
+        return validationError({ code: "That code isn't right. Check the SMS and try again." });
+      user.phone = p;
+      user.phoneVerified = true;
+      persist();
+      return ok(sessionUser(user));
+    }),
+  ),
+
   // NDPA 2023: a customer can delete their account
   http.delete(api('/me'), async ({ request }) => {
     await latency();
