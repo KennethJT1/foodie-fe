@@ -1,5 +1,8 @@
-import { toast } from '@/components/feedback';
+import { useEffect, useRef, useState } from 'react';
+
+import { Spinner, toast } from '@/components/feedback';
 import { Button } from '@/components/ui';
+import { env } from '@/lib/env';
 
 import { useGoogleSignIn } from '../hooks/useAuth';
 
@@ -21,11 +24,35 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const GSI_SRC = 'https://accounts.google.com/gsi/client';
+let gsiPromise;
+
+/** Loads Google Identity Services once and resolves with `window.google.accounts.id`. */
+function loadGsi() {
+  if (window.google?.accounts?.id) return Promise.resolve(window.google.accounts.id);
+  gsiPromise ??= new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = GSI_SRC;
+    script.async = true;
+    script.onload = () => resolve(window.google.accounts.id);
+    script.onerror = () => {
+      gsiPromise = undefined;
+      reject(new Error("Couldn't load Google sign-in. Check your connection and try again."));
+    };
+    document.head.appendChild(script);
+  });
+  return gsiPromise;
+}
+
 /**
  * Sign in with Google (FR-ACC-05). On mocks it signs in a demo Google account; with the real
- * backend the credential comes from Google Identity Services.
+ * backend it renders Google's own button (Google Identity Services) and sends its ID token.
  */
-export function GoogleButton({ onSignedIn, label = 'Continue with Google' }) {
+export function GoogleButton(props) {
+  return env.useMocks ? <MockGoogleButton {...props} /> : <RealGoogleButton {...props} />;
+}
+
+function MockGoogleButton({ onSignedIn, label = 'Continue with Google' }) {
   const google = useGoogleSignIn();
   return (
     <Button
@@ -46,6 +73,76 @@ export function GoogleButton({ onSignedIn, label = 'Continue with Google' }) {
     >
       {label}
     </Button>
+  );
+}
+
+function RealGoogleButton({ onSignedIn, label = 'Continue with Google' }) {
+  const google = useGoogleSignIn();
+  const container = useRef(null);
+  const [failed, setFailed] = useState(!env.googleClientId);
+  // Google calls back long after render; keep the latest handlers without re-rendering its button.
+  const latest = useRef({ google, onSignedIn });
+  latest.current = { google, onSignedIn };
+
+  useEffect(() => {
+    if (!env.googleClientId) return undefined;
+    let cancelled = false;
+    loadGsi()
+      .then((gsi) => {
+        if (cancelled || !container.current) return;
+        gsi.initialize({
+          client_id: env.googleClientId,
+          callback: ({ credential }) =>
+            latest.current.google.mutate(
+              { credential },
+              {
+                onSuccess: (...args) => latest.current.onSignedIn?.(...args),
+                onError: (e) => toast.error(e),
+              },
+            ),
+        });
+        gsi.renderButton(container.current, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: label.toLowerCase().startsWith('sign up') ? 'signup_with' : 'continue_with',
+          width: Math.min(container.current.offsetWidth || 400, 400),
+        });
+      })
+      .catch(() => !cancelled && setFailed(true));
+    return () => {
+      cancelled = true;
+    };
+  }, [label]);
+
+  if (failed) {
+    return (
+      <Button
+        variant="outline"
+        fullWidth
+        leftIcon={<GoogleIcon />}
+        onClick={() =>
+          toast.error(
+            env.googleClientId
+              ? "Couldn't load Google sign-in. Check your connection and try again."
+              : "Google sign-in isn't set up yet.",
+          )
+        }
+      >
+        {label}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-10 w-full justify-center">
+      <div ref={container} className="w-full max-w-[400px] [&>div]:mx-auto" />
+      {google.isPending && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-surface/80">
+          <Spinner />
+        </div>
+      )}
+    </div>
   );
 }
 
