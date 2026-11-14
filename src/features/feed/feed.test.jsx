@@ -66,7 +66,7 @@ describe('discovery and social screens (phase 9 done-when)', () => {
   it('shows food near the customer and switches tabs and categories', async () => {
     await renderApp('/', { as: ADA });
     expect(await screen.findByRole('status', { name: 'Loading food' })).toBeInTheDocument();
-    expect(await screen.findAllByRole('article')).toHaveLength(10);
+    expect(await screen.findAllByRole('article')).toHaveLength(12);
     await userEvent.click(screen.getByRole('tab', { name: 'Popular' }));
     await userEvent.click(await screen.findByRole('button', { name: /^Rice dishes/ }));
     expect(screen.getByRole('button', { name: /^Rice dishes/ })).toHaveAttribute(
@@ -74,6 +74,30 @@ describe('discovery and social screens (phase 9 done-when)', () => {
       'true',
     );
     await waitFor(() => expect(screen.getAllByRole('article').length).toBeGreaterThan(0));
+  });
+
+  it('pages the feed with numbered pages instead of loading more on scroll', async () => {
+    Element.prototype.scrollIntoView ??= () => {};
+    const { router } = await renderApp('/?tab=newest', { as: ADA });
+    const firstPage = await screen.findAllByRole('article');
+    expect(firstPage).toHaveLength(12);
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(within(nav).getByRole('button', { name: 'Previous page' })).toBeDisabled();
+
+    await userEvent.click(within(nav).getByRole('button', { name: 'Next page' }));
+    await waitFor(() => expect(router.state.location.search).toContain('page=2'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      ),
+    );
+    expect(screen.getAllByRole('article')).toHaveLength(12);
+
+    // Switching tab starts again at page 1
+    await userEvent.click(screen.getByRole('tab', { name: 'Popular' }));
+    await waitFor(() => expect(router.state.location.search).not.toContain('page='));
   });
 
   it('shows an error with retry when the feed fails', async () => {

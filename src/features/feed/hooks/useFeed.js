@@ -19,13 +19,15 @@ import {
 
 const nextCursor = (last) => last.meta?.nextCursor ?? undefined;
 
-/** Home feed, cursor paginated. params: { tab, categoryId } */
+/** Posts per home-feed page; 12 fills whole rows at 1, 2 and 3 columns. */
+export const FEED_PAGE_SIZE = 12;
+
+/** Home feed, one numbered page at a time. params: { tab, categoryId, page } */
 export const useFeed = (params, options = {}) =>
-  useInfiniteQuery({
+  useQuery({
     queryKey: queryKeys.feed.list(params),
-    queryFn: ({ pageParam }) => feedApi.feed({ ...params, cursor: pageParam, limit: 10 }),
-    initialPageParam: undefined,
-    getNextPageParam: nextCursor,
+    queryFn: () => feedApi.feed({ ...params, limit: FEED_PAGE_SIZE }),
+    placeholderData: keepPreviousData,
     ...options,
   });
 

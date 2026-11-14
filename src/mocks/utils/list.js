@@ -64,13 +64,34 @@ export function paginate(rows, params) {
   };
 }
 
-/** Cursor pagination for feeds and comments: `cursor` is the index of the next row. */
+/**
+ * Cursor pagination for feeds and comments: `cursor` is the index of the next row. Without a
+ * cursor, `page` picks the offset (numbered pages), like the backend.
+ */
 export function cursorPaginate(rows, params, defaultLimit = 10) {
   const limit = clamp(Number(params.get('limit')) || defaultLimit, 1, 50);
-  const start = Number(params.get('cursor')) || 0;
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const cursor = params.get('cursor');
+  const start =
+    cursor == null && params.has('page')
+      ? (Math.max(Math.floor(Number(params.get('page'))) || 1, 1) - 1) * limit
+      : Number(cursor) || 0;
+  const page = Math.floor(start / limit) + 1;
   const data = rows.slice(start, start + limit);
-  const next = start + limit < rows.length ? String(start + limit) : null;
-  return { data, meta: { nextCursor: next, limit, total: rows.length } };
+  const next = start + limit < total ? String(start + limit) : null;
+  return {
+    data,
+    meta: {
+      nextCursor: next,
+      limit,
+      total,
+      page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 }
 
 /** `{ success, data, meta }` envelope. */
