@@ -8,7 +8,8 @@ import { useVendorList } from '../hooks/useVendors';
 /** "Popular vendors" row of orange tiles with logos (UI kit). Hides itself on error. */
 export function PopularVendors() {
   const { data, isLoading, isError } = useVendorList({ sort: '-rating', limit: 6 });
-  if (isError || (!isLoading && !data?.data?.length)) return null;
+  const vendors = (Array.isArray(data?.data) ? data.data : []).filter(Boolean);
+  if (isError || (!isLoading && !vendors.length)) return null;
 
   return (
     <section aria-labelledby="popular-vendors" className="space-y-4">
@@ -22,7 +23,7 @@ export function PopularVendors() {
                 <Skeleton className="aspect-[4/5] w-full rounded-card" />
               </li>
             ))
-          : data.data.map((v) => (
+          : vendors.map((v) => (
               <li key={v.id}>
                 <Link
                   to={ROUTES.storefront(v.slug)}

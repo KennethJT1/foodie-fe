@@ -100,3 +100,18 @@ describe('demo form on mocks (phase 6 done-when)', () => {
     expect(screen.getByText('That price looks too high for one plate')).toBeInTheDocument();
   });
 });
+
+describe('InfiniteList', () => {
+  it('skips malformed pages and empty rows instead of crashing', async () => {
+    const { InfiniteList } = await import('./InfiniteList');
+    const query = {
+      data: { pages: [{ data: undefined }, { data: [{ id: 'a', name: 'Jollof' }, null] }, null] },
+      isLoading: false,
+      isError: false,
+      hasNextPage: false,
+    };
+    render(<InfiniteList query={query} renderItem={(item) => item.name} />);
+    expect(screen.getByText('Jollof')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+  });
+});

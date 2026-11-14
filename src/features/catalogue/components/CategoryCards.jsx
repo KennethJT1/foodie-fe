@@ -8,7 +8,7 @@ import { useCategories } from '../hooks/useCatalogue';
 export function CategoryCards({ value, onChange, className }) {
   const { data, isLoading, isError } = useCategories();
   if (isError) return null;
-  const cats = data?.data ?? [];
+  const cats = (Array.isArray(data?.data) ? data.data : []).filter(Boolean);
 
   return (
     <div

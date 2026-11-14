@@ -58,29 +58,46 @@ export function refreshAccessToken() {
 
 const NO_REFRESH = ['/auth/login', '/auth/refresh', '/auth/register', '/auth/otp'];
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const original = error.config;
-    const status = error.response?.status;
-    const skip = NO_REFRESH.some((p) => original?.url?.startsWith(p));
+/**
+ * A 2xx whose body is not the JSON envelope means the request never reached the API, e.g.
+ * VITE_API_URL is a relative path on a static host and the SPA rewrite answered with
+ * index.html. Treat it as a network error so screens show their error state.
+ */
+function assertJsonEnvelope(response) {
+  const body = response.data;
+  if (response.status === 204 || (body && typeof body === 'object')) return response;
+  return Promise.reject({
+    isApiError: true,
+    status: 0,
+    code: 'BAD_RESPONSE',
+    message: "We couldn't reach KJT Foodie. Please try again in a moment.",
+    fieldErrors: {},
+  });
+}
 
-    if (status === 401 && original && !original._retried && !skip) {
-      original._retried = true;
-      try {
-        const token = await refreshAccessToken();
-        original.headers.Authorization = `Bearer ${token}`;
-        return api(original);
-      } catch {
-        authBridge.onSessionExpired();
-      }
+api.interceptors.response.use(assertJsonEnvelope, async (error) => {
+  const original = error.config;
+  const status = error.response?.status;
+  const skip = NO_REFRESH.some((p) => original?.url?.startsWith(p));
+
+  if (status === 401 && original && !original._retried && !skip) {
+    original._retried = true;
+    try {
+      const token = await refreshAccessToken();
+      original.headers.Authorization = `Bearer ${token}`;
+      return api(original);
+    } catch {
+      authBridge.onSessionExpired();
     }
-    return Promise.reject(normaliseError(error));
-  },
-);
+  }
+  return Promise.reject(normaliseError(error));
+});
 
 /** Unwraps `{ success, data }` → data. */
-export const unwrap = (response) => response.data.data;
+export const unwrap = (response) => response?.data?.data;
 
-/** Keeps `{ data, meta }` for paginated lists. */
-export const unwrapList = (response) => ({ data: response.data.data, meta: response.data.meta });
+/** Keeps `{ data, meta }` for paginated lists; `data` is always an array. */
+export const unwrapList = (response) => {
+  const list = response?.data?.data;
+  return { data: Array.isArray(list) ? list : [], meta: response?.data?.meta ?? {} };
+};

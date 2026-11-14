@@ -19,7 +19,7 @@ const VIRTUALIZE_AFTER = 100;
 export function InfiniteList({
   query,
   renderItem,
-  getKey = (item) => item.id,
+  getKey = (item) => item?.id,
   loadingFallback,
   emptyState,
   className,
@@ -39,7 +39,10 @@ export function InfiniteList({
     isFetchingNextPage,
   } = query;
   const sentinel = useRef(null);
-  const items = data?.pages.flatMap((p) => p.data) ?? [];
+  // A page with a missing or malformed `data` contributes nothing instead of `undefined` rows
+  const items = (data?.pages ?? [])
+    .flatMap((p) => (Array.isArray(p?.data) ? p.data : []))
+    .filter(Boolean);
 
   useEffect(() => {
     if (!autoLoad || !hasNextPage || !sentinel.current) return undefined;
@@ -66,7 +69,7 @@ export function InfiniteList({
       ) : (
         <Tag className={className}>
           {items.map((item, i) => (
-            <li key={getKey(item)} className={cn(itemClassName)}>
+            <li key={getKey(item) ?? i} className={cn(itemClassName)}>
               {renderItem(item, i)}
             </li>
           ))}
