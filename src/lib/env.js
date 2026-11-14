@@ -15,11 +15,6 @@ export const env = {
   isDev: import.meta.env.DEV,
 };
 
-// A relative API URL only works behind the Vite dev proxy. On a static host (Vercel) it hits
-// the SPA rewrite and gets index.html back, so every API call fails.
-if (import.meta.env.PROD && !env.useMocks && env.apiUrl.startsWith('/')) {
-  console.error(
-    `[KJT Foodie] VITE_API_URL is "${env.apiUrl}". Set it to the backend's full URL ` +
-      '(e.g. https://<api host>/api/v1) in the hosting env vars and redeploy.',
-  );
-}
+// A relative API URL (the default "/api/v1") needs the host to forward it to the backend:
+// the Vite dev proxy locally, the /api/v1 rewrite in vercel.json in production. Same-origin
+// requests also let the browser send the SameSite=lax refresh cookie.

@@ -45,7 +45,9 @@ export function refreshAccessToken() {
     refreshPromise = axios
       .post(`${env.apiUrl}/auth/refresh`, null, { withCredentials: true })
       .then((r) => {
-        const { accessToken, user } = r.data.data;
+        // Not the API envelope (e.g. index.html from a misrouted request): no session
+        const { accessToken, user } = r?.data?.data ?? {};
+        if (!accessToken) throw normaliseError({ response: { status: 401 } });
         authBridge.setAccessToken(accessToken, user);
         return accessToken;
       })
