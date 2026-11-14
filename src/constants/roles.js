@@ -31,3 +31,13 @@ export const ROLE_HOME = {
 };
 
 export const getRoleHome = (user) => (user ? (ROLE_HOME[user.role] ?? '/') : '/');
+
+export const isSuperAdmin = (user) =>
+  user?.role === ROLES.ADMIN && user.adminRole === ADMIN_ROLES.SUPER_ADMIN;
+
+/**
+ * Whether the user may see and edit their own account details. Every role can, except admins
+ * below super admin: their details are managed by a super admin (Admin users).
+ */
+export const canManageOwnAccount = (user) =>
+  Boolean(user) && (user.role !== ROLES.ADMIN || isSuperAdmin(user));

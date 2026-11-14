@@ -2,11 +2,13 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { PERMISSIONS as P } from '@/constants/permissions';
 import { ROLES } from '@/constants/roles';
+import { ROUTES } from '@/constants/routes';
 import {
   RedirectIfAuthenticated,
   RequireActiveSubscription,
   RequireApproved,
   RequireAuth,
+  RequireOwnAccountAccess,
   RequirePermission,
   RequireRole,
 } from '@/features/auth';
@@ -209,12 +211,21 @@ export const routes = [
         element: (
           <RequireAuth>
             <RequireRole roles={[ROLES.ADMIN]}>
-              <DashboardLayout nav={adminNav} subtitle="Admin" home="/admin" />
+              <DashboardLayout
+                nav={adminNav}
+                subtitle="Admin"
+                home="/admin"
+                profileTo={ROUTES.admin.profile}
+              />
             </RequireRole>
           </RequireAuth>
         ),
         children: [
           { index: true, ...page(() => import('@/pages/admin/OverviewPage')) },
+          {
+            element: <RequireOwnAccountAccess />,
+            children: [{ path: 'profile', ...page(() => import('@/pages/admin/ProfilePage')) }],
+          },
           can(P.VENDORS_APPROVE, [
             {
               path: 'vendors/approvals',

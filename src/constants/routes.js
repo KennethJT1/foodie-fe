@@ -64,6 +64,7 @@ export const ROUTES = {
 
   admin: {
     root: '/admin',
+    profile: '/admin/profile',
     vendors: '/admin/vendors',
     vendorApprovals: '/admin/vendors/approvals',
     vendor: (id = ':vendorId') => `/admin/vendors/${id}`,

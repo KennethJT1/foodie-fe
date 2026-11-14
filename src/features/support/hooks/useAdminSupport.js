@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from '@/components/feedback';
 import { queryKeys } from '@/constants/query-keys';
 
+import { TICKET_POLL_MS, useTicketLive } from './useTicketLive';
 import { supportApi } from '../api/support.api';
 
 export const useAdminTickets = (params) =>
@@ -12,12 +13,17 @@ export const useAdminTickets = (params) =>
     placeholderData: keepPreviousData,
   });
 
-export const useAdminTicket = (id) =>
-  useQuery({
-    queryKey: queryKeys.tickets.detail(id),
+/** A ticket in the inbox; new customer / vendor / rider replies show up without a refresh. */
+export const useAdminTicket = (id) => {
+  const queryKey = queryKeys.tickets.detail(id);
+  useTicketLive(queryKey, Boolean(id));
+  return useQuery({
+    queryKey,
     queryFn: () => supportApi.adminTicket(id),
     enabled: Boolean(id),
+    refetchInterval: TICKET_POLL_MS,
   });
+};
 
 export const useSupportAgents = () =>
   useQuery({ queryKey: ['admin', 'agents'], queryFn: supportApi.agents, staleTime: 5 * 60 * 1000 });

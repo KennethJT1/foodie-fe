@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { PageLoader } from '@/components/feedback';
 import { hasPermission } from '@/constants/permissions';
-import { getRoleHome, ROLES } from '@/constants/roles';
+import { canManageOwnAccount, getRoleHome, ROLES } from '@/constants/roles';
 import { ROUTES } from '@/constants/routes';
 import { SUBSCRIPTION_STATUS } from '@/constants/statuses';
 import { useAuthStore } from '@/stores/auth-store';
@@ -33,6 +33,14 @@ export function RequireRole({ roles, children }) {
   const user = useAuthStore((s) => s.user);
   if (!user) return null;
   if (!roles.includes(user.role)) return <Navigate to={getRoleHome(user)} replace />;
+  return render(children);
+}
+
+/** Own account pages: admins below super admin go back to their dashboard. */
+export function RequireOwnAccountAccess({ children }) {
+  const user = useAuthStore((s) => s.user);
+  if (!user) return null;
+  if (!canManageOwnAccount(user)) return <Navigate to={getRoleHome(user)} replace />;
   return render(children);
 }
 

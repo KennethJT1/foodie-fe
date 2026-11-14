@@ -17,6 +17,7 @@ export {
   RequireActiveSubscription,
   RequireApproved,
   RequireAuth,
+  RequireOwnAccountAccess,
   RequirePermission,
   RequireRole,
 } from './guards/guards';

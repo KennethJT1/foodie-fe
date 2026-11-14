@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 import { queryKeys } from '@/constants/query-keys';
 
+import { TICKET_POLL_MS, useTicketLive } from './useTicketLive';
 import { supportApi } from '../api/support.api';
 
 export const useMyTickets = (params) =>
@@ -11,13 +12,17 @@ export const useMyTickets = (params) =>
     placeholderData: keepPreviousData,
   });
 
-export const useMyTicket = (id) =>
-  useQuery({
-    queryKey: [...queryKeys.tickets.detail(id), 'me'],
+/** One of the user's tickets; new agent replies show up without a page refresh. */
+export const useMyTicket = (id) => {
+  const queryKey = [...queryKeys.tickets.detail(id), 'me'];
+  useTicketLive(queryKey, Boolean(id));
+  return useQuery({
+    queryKey,
     queryFn: () => supportApi.myTicket(id),
     enabled: Boolean(id),
-    refetchInterval: 30000,
+    refetchInterval: TICKET_POLL_MS,
   });
+};
 
 const useMyTicketMutation = (mutationFn) => {
   const qc = useQueryClient();

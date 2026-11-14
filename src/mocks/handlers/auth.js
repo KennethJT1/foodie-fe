@@ -1,5 +1,6 @@
 import { http } from 'msw';
 
+import { canManageOwnAccount } from '@/constants/roles';
 import { normalisePhone } from '@/lib/format';
 
 import { db, findById, persist } from '../db';
@@ -263,6 +264,7 @@ export const authHandlers = [
     await latency();
     const { user, error } = requireUser(request);
     if (error) return error;
+    if (!canManageOwnAccount(user)) return fail(403);
     const body = await readJson(request);
     const email = body.email?.trim().toLowerCase();
     if (email && email !== user.email && db.users.some((u) => u.email === email)) {
@@ -282,6 +284,7 @@ export const authHandlers = [
       await latency();
       const { user, error } = requireUser(request);
       if (error) return error;
+      if (!canManageOwnAccount(user)) return fail(403);
       const { phone, code } = await readJson(request);
       const p = normalisePhone(phone ?? '');
       if (!p) return validationError({ phone: 'Enter a valid Nigerian phone number' });
