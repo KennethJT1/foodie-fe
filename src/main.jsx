@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from '@/app/App';
+import { startKeepAlive } from '@/lib/keep-alive';
 import '@/styles/index.css';
 
 async function boot() {
@@ -14,6 +15,8 @@ async function boot() {
       // Some embedded browsers block service workers; render anyway so the UI can be inspected.
       console.error('[KJT Foodie] Mock API failed to start. API calls will fail.', error);
     }
+  } else {
+    startKeepAlive();
   }
 
   createRoot(document.getElementById('root')).render(
