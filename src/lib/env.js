@@ -10,6 +10,8 @@ export const env = {
       : ''),
   useMocks: import.meta.env.VITE_USE_MOCKS === 'true',
   paystackPublicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
+  // 'google' to use Google Maps (needs a billed key); anything else = free OpenStreetMap
+  mapProvider: import.meta.env.VITE_MAP_PROVIDER || 'osm',
   googleMapsKey: import.meta.env.VITE_GOOGLE_MAPS_KEY || '',
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
   isDev: import.meta.env.DEV,

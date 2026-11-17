@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { formatDateTime, formatEta, formatNaira } from '@/lib/format';
 
 /** Subtotal, delivery fee, processing fee, total and ETA from /checkout/quote (FR-ORD-02). */
-export function CheckoutSummary({ quote, isLoading, error, isUpdating, className }) {
+export function CheckoutSummary({ quote, isLoading, error, isUpdating, missing, className }) {
   return (
     <Card
       className={cn('space-y-3', className)}
@@ -24,6 +24,15 @@ export function CheckoutSummary({ quote, isLoading, error, isUpdating, className
       ) : !quote ? (
         isLoading ? (
           <SkeletonText lines={4} />
+        ) : missing?.length ? (
+          <div className="text-sm text-ink-muted">
+            <p>To see the total and pay:</p>
+            <ul className="mt-1 list-disc pl-5">
+              {missing.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <p className="text-sm text-ink-muted">Pick a delivery address to see the total.</p>
         )

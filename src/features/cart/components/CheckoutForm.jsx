@@ -29,6 +29,8 @@ export function CheckoutForm() {
 
   const [choice, setChoice] = useState(null);
   const [newAddress, setNewAddress] = useState({ label: 'Home', city: 'Lagos' });
+  // Show what's missing in a new address once the customer starts filling it in
+  const [addressTouched, setAddressTouched] = useState(false);
   const [saveNew, setSaveNew] = useState(true);
   const [note, setNote] = useState('');
   const [when, setWhen] = useState('now');
@@ -106,7 +108,14 @@ export function CheckoutForm() {
           )}
           {selected === NEW && (
             <div className="space-y-3">
-              <AddressPicker value={newAddress} onChange={setNewAddress} errors={{}} />
+              <AddressPicker
+                value={newAddress}
+                onChange={(a) => {
+                  setNewAddress(a);
+                  setAddressTouched(true);
+                }}
+                errors={addressTouched ? newErrors : {}}
+              />
               <Checkbox
                 label="Save this address for next time"
                 checked={saveNew}
@@ -168,6 +177,13 @@ export function CheckoutForm() {
           quote={quote.data && !quote.error ? quote.data : null}
           isLoading={quote.isLoading}
           isUpdating={quote.isFetching}
+          missing={
+            selected === NEW && Object.keys(newErrors).length
+              ? Object.values(newErrors)
+              : when === 'later' && !scheduledFor
+                ? ['Pick a delivery time']
+                : null
+          }
           error={isClosed && when === 'now' ? null : quote.error}
         />
         {payError && (
